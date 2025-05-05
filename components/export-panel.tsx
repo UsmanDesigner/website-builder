@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, Download, Globe, Code, Copy } from "lucide-react"
+import { Loader2, Download, Globe, Code, Copy, Smartphone, Tablet, Monitor } from "lucide-react"
 import { generateHtmlCode } from "@/lib/html-generator"
 import type { ComponentType } from "@/lib/types"
 
@@ -24,6 +24,7 @@ export function ExportPanel({ components, styles, onClose }: ExportPanelProps) {
   const [siteName, setSiteName] = useState("")
   const [htmlCode, setHtmlCode] = useState("")
   const [copied, setCopied] = useState(false)
+  const [previewDevice, setPreviewDevice] = useState("desktop")
 
   const handleGenerateHtml = async () => {
     setIsGenerating(true)
@@ -89,7 +90,7 @@ export function ExportPanel({ components, styles, onClose }: ExportPanelProps) {
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>Export Website</DialogTitle>
         </DialogHeader>
@@ -112,8 +113,70 @@ export function ExportPanel({ components, styles, onClose }: ExportPanelProps) {
 
           <TabsContent value="download" className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Download your website as a static HTML file that you can host anywhere.
+              Download your website as a responsive HTML file that works on all devices.
             </p>
+
+            <div className="border rounded-md p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-medium">Preview</h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant={previewDevice === "mobile" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPreviewDevice("mobile")}
+                  >
+                    <Smartphone className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={previewDevice === "tablet" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPreviewDevice("tablet")}
+                  >
+                    <Tablet className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={previewDevice === "desktop" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPreviewDevice("desktop")}
+                  >
+                    <Monitor className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div
+                className={`border rounded-md mx-auto overflow-hidden transition-all ${
+                  previewDevice === "mobile"
+                    ? "w-[320px] h-[480px]"
+                    : previewDevice === "tablet"
+                      ? "w-[768px] h-[1024px]"
+                      : "w-full h-[400px]"
+                }`}
+              >
+                {htmlCode ? (
+                  <iframe srcDoc={htmlCode} className="w-full h-full border-0" title="Website Preview" />
+                ) : (
+                  <div className="flex items-center justify-center h-full bg-muted">
+                    <p className="text-sm text-muted-foreground">Generate HTML to preview</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Button onClick={handleGenerateHtml} disabled={isGenerating} className="mr-2">
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Code className="h-4 w-4 mr-2" />
+                  Generate Preview
+                </>
+              )}
+            </Button>
+
             <Button onClick={handleDownload} disabled={isGenerating}>
               {isGenerating ? (
                 <>
@@ -130,7 +193,7 @@ export function ExportPanel({ components, styles, onClose }: ExportPanelProps) {
           </TabsContent>
 
           <TabsContent value="deploy" className="space-y-4">
-            <p className="text-sm text-muted-foreground">Deploy your website directly to a custom domain.</p>
+            <p className="text-sm text-muted-foreground">Deploy your responsive website directly to a custom domain.</p>
 
             <div className="space-y-2">
               <Label htmlFor="site-name">Site Name</Label>
@@ -172,7 +235,9 @@ export function ExportPanel({ components, styles, onClose }: ExportPanelProps) {
           </TabsContent>
 
           <TabsContent value="code" className="space-y-4">
-            <p className="text-sm text-muted-foreground">View and copy the generated HTML code for your website.</p>
+            <p className="text-sm text-muted-foreground">
+              View and copy the generated responsive HTML code for your website.
+            </p>
 
             <div className="relative">
               <Button size="sm" variant="ghost" className="absolute top-2 right-2 h-8 w-8 p-0" onClick={handleCopyCode}>

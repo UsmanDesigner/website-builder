@@ -11,6 +11,7 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Website</title>
   <style>
+    /* Base styles */
     html, body {
       margin: 0;
       padding: 0;
@@ -38,13 +39,16 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
       min-height: 100vh;
     }
     
+    /* Responsive containers */
     .container {
+      width: 100%;
       max-width: 1200px;
       margin: 0 auto;
       padding: 0 1rem;
     }
     
     .narrow {
+      width: 100%;
       max-width: 800px;
       margin: 0 auto;
       padding: 0 1rem;
@@ -54,11 +58,19 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
       margin-top: auto;
     }
 
+    /* Responsive images */
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+
     /* Header styles */
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
 
     .logo {
@@ -79,11 +91,21 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
       list-style: none;
       padding: 0;
       margin: 0;
+      flex-wrap: wrap;
     }
 
     nav a {
       text-decoration: none;
       color: inherit;
+    }
+
+    /* Mobile menu */
+    .mobile-menu-button {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
     }
 
     /* Button styles */
@@ -92,6 +114,7 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
       padding: 0.75rem 1.5rem;
       cursor: pointer;
       text-decoration: none;
+      margin-bottom: 0.5rem;
     }
 
     .btn-primary {
@@ -155,10 +178,83 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
       height: 100%;
       object-fit: cover;
     }
+
+    /* Responsive grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    /* Responsive flex layouts */
+    .flex-row {
+      display: flex;
+      flex-direction: row;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .flex-col {
+      flex: 1;
+    }
+
+    /* Media queries for responsive design */
+    @media (max-width: 768px) {
+      .flex-row {
+        flex-direction: column;
+      }
+      
+      .flex-col {
+        width: 100%;
+      }
+      
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .mobile-menu-button {
+        display: block;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+      }
+      
+      nav.mobile-hidden ul {
+        display: none;
+      }
+      
+      nav.mobile-visible ul {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      h1 {
+        font-size: 2rem !important;
+      }
+      
+      h2 {
+        font-size: 1.5rem !important;
+      }
+      
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+      }
+    }
   </style>
   <script>
     // Smooth scroll animation for internal links
     document.addEventListener('DOMContentLoaded', function() {
+      // Handle smooth scrolling
       document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
           e.preventDefault();
@@ -172,6 +268,21 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
               behavior: 'smooth',
               block: 'start'
             });
+          }
+        });
+      });
+      
+      // Handle mobile menu toggle
+      const mobileMenuButtons = document.querySelectorAll('.mobile-menu-button');
+      mobileMenuButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const nav = this.nextElementSibling;
+          if (nav.classList.contains('mobile-hidden')) {
+            nav.classList.remove('mobile-hidden');
+            nav.classList.add('mobile-visible');
+          } else {
+            nav.classList.add('mobile-hidden');
+            nav.classList.remove('mobile-visible');
           }
         });
       });
@@ -277,6 +388,10 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
       backgroundStyle = `background: ${gradientStyle}; background-color: transparent;`
     }
 
+    // Determine container class based on width
+    const containerClass =
+      combinedStyles.width === "container" ? "container" : combinedStyles.width === "narrow" ? "narrow" : ""
+
     // Convert React component to HTML (simplified)
     return `<div ${sectionId} style="
       font-family: ${
@@ -298,7 +413,6 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
       border: ${combinedStyles.borderWidth}px solid ${combinedStyles.borderColor};
       position: relative;
       overflow: hidden;
-      ${combinedStyles.width !== "full" ? `max-width: ${combinedStyles.width === "container" ? "1200px" : "800px"}; margin: 0 auto;` : ""}
       ${
         combinedStyles.boxShadow === "sm"
           ? "box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);"
@@ -312,7 +426,7 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
       }
     ">
       ${backgroundOverlayDiv}
-      <div style="position: relative; z-index: ${backgroundOverlayDiv ? "2" : "1"}">
+      <div class="${containerClass}" style="position: relative; z-index: ${backgroundOverlayDiv ? "2" : "1"}">
         ${
           component.type === "header"
             ? generateHeaderHtml(component)
@@ -355,7 +469,14 @@ function generateHeaderHtml(component: ComponentType): string {
         ${content.logoImage ? `<img src="${content.logoImage}" alt="Logo">` : ""}
         ${showLogoText ? content.logoText || "Brand" : ""}
       </div>
-      <nav>
+      <button class="mobile-menu-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <nav class="mobile-hidden">
         <ul>
           ${(content.menuItems || ["Home", "About", "Services", "Contact"])
             .map((item: string, index: number) => {
@@ -406,12 +527,12 @@ function generateContentHtml(component: ComponentType): string {
     `
   } else if (component.template === "text-with-image") {
     return `
-      <section style="display: flex; flex-direction: row; gap: 2rem; align-items: center;">
-        <div style="flex: 1;">
+      <section class="flex-row">
+        <div class="flex-col">
           <h2 style="font-size: 2rem; margin-bottom: 1rem;">${content.heading || "About Our Company"}</h2>
           <p>${content.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit."}</p>
         </div>
-        <div style="flex: 1;">
+        <div class="flex-col">
           <div class="image-placeholder">
             ${
               content.image
@@ -426,13 +547,13 @@ function generateContentHtml(component: ComponentType): string {
     return `
       <section style="text-align: center;">
         <h2 style="font-size: 2rem; margin-bottom: 2rem;">${content.heading || "Our Features"}</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+        <div class="grid">
           ${(
             content.features || [
-              { title: "Feature 1", description: "Description of feature 1" },
-              { title: "Feature 2", description: "Description of feature 2" },
-              { title: "Feature 3", description: "Description of feature 3" },
-              { title: "Feature 4", description: "Description of feature 4" },
+              { title: "Feature 1", description: "Description of feature 1", image: null },
+              { title: "Feature 2", description: "Description of feature 2", image: null },
+              { title: "Feature 3", description: "Description of feature 3", image: null },
+              { title: "Feature 4", description: "Description of feature 4", image: null },
             ]
           )
             .map(
@@ -469,10 +590,10 @@ function generateFooterHtml(component: ComponentType): string {
   // Check which template is being used
   if (component.template === "simple-footer") {
     return `
-      <footer style="display: flex; justify-content: space-between; align-items: center;">
+      <footer style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
         <div>${content.copyright || `© ${new Date().getFullYear()} ${content.companyName || "Company Name"}. All rights reserved.`}</div>
         <nav>
-          <ul style="display: flex; gap: 1rem; list-style: none; padding: 0; margin: 0;">
+          <ul style="display: flex; flex-wrap: wrap; gap: 1rem; list-style: none; padding: 0; margin: 0;">
             ${(content.links || ["Privacy", "Terms", "Contact"])
               .map((item: string, index: number) => {
                 const linkType = (content.linkTypes || [])[index] || "external"
@@ -491,7 +612,7 @@ function generateFooterHtml(component: ComponentType): string {
   } else if (component.template === "multi-column-footer") {
     return `
       <footer>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
           ${(
             content.columns || [
               { title: "Company", links: ["About", "Team", "Careers"] },
