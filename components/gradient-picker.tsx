@@ -194,7 +194,7 @@ export function GradientPicker({ value, onChange }: GradientPickerProps) {
                     max={100}
                     step={1}
                     value={[colorObj.position]}
-                    onValueChange={([value]) => handlePositionChange(index, value)}
+                    onValueChange={(values: number[]) => handlePositionChange(index, values[0])}
                     className="flex-1"
                   />
                   <span className="w-8 text-xs text-right">{colorObj.position}%</span>

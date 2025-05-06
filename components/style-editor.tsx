@@ -25,11 +25,11 @@ import {
   LinkIcon,
   Anchor,
   ExternalLink,
+  X,
 } from "lucide-react"
 import type { ComponentType } from "@/lib/types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { GradientPicker } from "@/components/gradient-picker"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
@@ -40,6 +40,7 @@ interface StyleEditorProps {
   onUpdateComponent: (id: string, updates: Partial<ComponentType>) => void
   sectionIds: string[]
   allComponents: ComponentType[]
+  onClose?: () => void
 }
 
 export function StyleEditor({
@@ -49,6 +50,7 @@ export function StyleEditor({
   onUpdateComponent,
   sectionIds,
   allComponents,
+  onClose,
 }: StyleEditorProps) {
   const [activeTab, setActiveTab] = useState("typography")
 
@@ -256,8 +258,16 @@ export function StyleEditor({
   const hasButtons = selectedComponent.type === "content" && selectedComponent.content.buttons
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Style Editor</h2>
+    <div className="p-4 relative">
+      {onClose && (
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Style Editor</h2>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+      {!onClose && <h2 className="text-xl font-bold mb-4">Style Editor</h2>}
 
       <div className="mb-6">
         <h3 className="font-medium mb-2">Component Content</h3>
@@ -289,6 +299,85 @@ export function StyleEditor({
           </div>
           <p className="text-xs text-muted-foreground mt-1">This ID can be used to link directly to this section</p>
         </div>
+
+        {/* E-commerce specific fields */}
+        {selectedComponent.template === "product-grid" && (
+          <div className="mb-4 p-3 border rounded-md">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="font-medium">WhatsApp Integration</Label>
+              <Switch
+                checked={selectedComponent.content.showWhatsAppButton}
+                onCheckedChange={(checked) => updateComponentContent("showWhatsAppButton", checked)}
+              />
+            </div>
+
+            {selectedComponent.content.showWhatsAppButton && (
+              <>
+                <div className="mb-2">
+                  <Label htmlFor="whatsAppNumber" className="mb-1 block text-sm">
+                    WhatsApp Number (with country code)
+                  </Label>
+                  <Input
+                    id="whatsAppNumber"
+                    value={selectedComponent.content.whatsAppNumber || ""}
+                    onChange={(e) => updateComponentContent("whatsAppNumber", e.target.value)}
+                    placeholder="+1234567890"
+                  />
+                </div>
+                <div className="mb-2">
+                  <Label htmlFor="whatsAppMessage" className="mb-1 block text-sm">
+                    Message Template
+                  </Label>
+                  <Input
+                    id="whatsAppMessage"
+                    value={selectedComponent.content.whatsAppMessage || ""}
+                    onChange={(e) => updateComponentContent("whatsAppMessage", e.target.value)}
+                    placeholder="Hi, I'm interested in purchasing: "
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {selectedComponent.template === "product-detail" && (
+          <div className="mb-4 p-3 border rounded-md">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="font-medium">WhatsApp Integration</Label>
+              <Switch
+                checked={selectedComponent.content.showWhatsAppButton}
+                onCheckedChange={(checked) => updateComponentContent("showWhatsAppButton", checked)}
+              />
+            </div>
+
+            {selectedComponent.content.showWhatsAppButton && (
+              <>
+                <div className="mb-2">
+                  <Label htmlFor="whatsAppNumber" className="mb-1 block text-sm">
+                    WhatsApp Number (with country code)
+                  </Label>
+                  <Input
+                    id="whatsAppNumber"
+                    value={selectedComponent.content.whatsAppNumber || ""}
+                    onChange={(e) => updateComponentContent("whatsAppNumber", e.target.value)}
+                    placeholder="+1234567890"
+                  />
+                </div>
+                <div className="mb-2">
+                  <Label htmlFor="whatsAppMessage" className="mb-1 block text-sm">
+                    Message Template
+                  </Label>
+                  <Input
+                    id="whatsAppMessage"
+                    value={selectedComponent.content.whatsAppMessage || ""}
+                    onChange={(e) => updateComponentContent("whatsAppMessage", e.target.value)}
+                    placeholder="Hi, I'm interested in purchasing: "
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {selectedComponent.type === "header" && (
           <>
@@ -355,6 +444,22 @@ export function StyleEditor({
                 }
               />
             </div>
+
+            {/* Cart count for e-commerce header */}
+            {selectedComponent.template === "ecommerce-header" && (
+              <div className="mb-4">
+                <Label htmlFor="cartCount" className="mb-1 block">
+                  Cart Count
+                </Label>
+                <Input
+                  id="cartCount"
+                  type="number"
+                  min="0"
+                  value={selectedComponent.content.cartCount || 0}
+                  onChange={(e) => updateComponentContent("cartCount", Number.parseInt(e.target.value) || 0)}
+                />
+              </div>
+            )}
 
             {/* Menu Item URLs */}
             {selectedComponent.content.menuItems && selectedComponent.content.menuItems.length > 0 && (
@@ -426,6 +531,724 @@ export function StyleEditor({
           </>
         )}
 
+        {/* Product Grid Editor */}
+        {selectedComponent.template === "product-grid" && (
+          <div className="mb-4 border-t pt-4">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="font-medium">Products</h4>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const newProducts = [...(selectedComponent.content.products || [])]
+                  newProducts.push({
+                    id: `prod-${newProducts.length + 1}`,
+                    title: `Product ${newProducts.length + 1}`,
+                    category: "New Category",
+                    price: 29.99,
+                    salePrice: null,
+                    description: "Product description",
+                    image: null,
+                    link: "#",
+                    inStock: true,
+                    quantity: 10,
+                    sku: `SKU${String(newProducts.length + 1).padStart(3, "0")}`,
+                  })
+                  updateComponentContent("products", newProducts)
+                }}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add Product
+              </Button>
+            </div>
+
+            {selectedComponent.content.products && selectedComponent.content.products.length > 0 ? (
+              selectedComponent.content.products.map((product: any, index: number) => (
+                <div key={index} className="mb-4 p-3 border rounded-md relative">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="absolute top-2 right-2 h-6 w-6 p-0"
+                    onClick={() => {
+                      const newProducts = [...selectedComponent.content.products]
+                      newProducts.splice(index, 1)
+                      updateComponentContent("products", newProducts)
+                    }}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`product-${index}-title`} className="mb-1 block">
+                      Title
+                    </Label>
+                    <Input
+                      id={`product-${index}-title`}
+                      value={product.title || ""}
+                      onChange={(e) => {
+                        const newProducts = [...selectedComponent.content.products]
+                        newProducts[index] = { ...product, title: e.target.value }
+                        updateComponentContent("products", newProducts)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`product-${index}-category`} className="mb-1 block">
+                      Category
+                    </Label>
+                    <Input
+                      id={`product-${index}-category`}
+                      value={product.category || ""}
+                      onChange={(e) => {
+                        const newProducts = [...selectedComponent.content.products]
+                        newProducts[index] = { ...product, category: e.target.value }
+                        updateComponentContent("products", newProducts)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`product-${index}-price`} className="mb-1 block">
+                      Price
+                    </Label>
+                    <Input
+                      id={`product-${index}-price`}
+                      type="number"
+                      step="0.01"
+                      value={product.price || 0}
+                      onChange={(e) => {
+                        const newProducts = [...selectedComponent.content.products]
+                        newProducts[index] = { ...product, price: Number.parseFloat(e.target.value) || 0 }
+                        updateComponentContent("products", newProducts)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <Label htmlFor={`product-${index}-sale`}>On Sale</Label>
+                      <Switch
+                        id={`product-${index}-sale`}
+                        checked={product.salePrice !== null}
+                        onCheckedChange={(checked) => {
+                          const newProducts = [...selectedComponent.content.products]
+                          newProducts[index] = {
+                            ...product,
+                            salePrice: checked ? (product.price * 0.8).toFixed(2) : null,
+                          }
+                          updateComponentContent("products", newProducts)
+                        }}
+                      />
+                    </div>
+
+                    {product.salePrice !== null && (
+                      <div className="mt-2">
+                        <Label htmlFor={`product-${index}-saleprice`} className="mb-1 block">
+                          Sale Price
+                        </Label>
+                        <Input
+                          id={`product-${index}-saleprice`}
+                          type="number"
+                          step="0.01"
+                          value={product.salePrice || 0}
+                          onChange={(e) => {
+                            const newProducts = [...selectedComponent.content.products]
+                            newProducts[index] = { ...product, salePrice: Number.parseFloat(e.target.value) || 0 }
+                            updateComponentContent("products", newProducts)
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`product-${index}-description`} className="mb-1 block">
+                      Description
+                    </Label>
+                    <textarea
+                      id={`product-${index}-description`}
+                      className="w-full min-h-[60px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={product.description || ""}
+                      onChange={(e) => {
+                        const newProducts = [...selectedComponent.content.products]
+                        newProducts[index] = { ...product, description: e.target.value }
+                        updateComponentContent("products", newProducts)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <Label htmlFor={`product-${index}-stock`}>In Stock</Label>
+                      <Switch
+                        id={`product-${index}-stock`}
+                        checked={product.inStock}
+                        onCheckedChange={(checked) => {
+                          const newProducts = [...selectedComponent.content.products]
+                          newProducts[index] = {
+                            ...product,
+                            inStock: checked,
+                            quantity: checked ? product.quantity || 1 : 0,
+                          }
+                          updateComponentContent("products", newProducts)
+                        }}
+                      />
+                    </div>
+
+                    {product.inStock && (
+                      <div className="mt-2">
+                        <Label htmlFor={`product-${index}-quantity`} className="mb-1 block">
+                          Quantity
+                        </Label>
+                        <Input
+                          id={`product-${index}-quantity`}
+                          type="number"
+                          min="0"
+                          value={product.quantity || 0}
+                          onChange={(e) => {
+                            const newProducts = [...selectedComponent.content.products]
+                            const quantity = Number.parseInt(e.target.value) || 0
+                            newProducts[index] = {
+                              ...product,
+                              quantity,
+                              inStock: quantity > 0,
+                            }
+                            updateComponentContent("products", newProducts)
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`product-${index}-sku`} className="mb-1 block">
+                      SKU
+                    </Label>
+                    <Input
+                      id={`product-${index}-sku`}
+                      value={product.sku || ""}
+                      onChange={(e) => {
+                        const newProducts = [...selectedComponent.content.products]
+                        newProducts[index] = { ...product, sku: e.target.value }
+                        updateComponentContent("products", newProducts)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`product-${index}-image`} className="mb-1 block">
+                      Product Image
+                    </Label>
+                    <div className="flex flex-col gap-2">
+                      {product.image && (
+                        <div className="relative w-full h-24 mb-2 border rounded overflow-hidden">
+                          <img
+                            src={product.image || "/placeholder.svg"}
+                            alt={product.title}
+                            className="object-cover w-full h-full"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 bg-background/80 rounded-full"
+                            onClick={() => {
+                              const newProducts = [...selectedComponent.content.products]
+                              newProducts[index] = { ...product, image: null }
+                              updateComponentContent("products", newProducts)
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      <Input
+                        id={`product-${index}-image`}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            const reader = new FileReader()
+                            reader.onload = (event) => {
+                              const newProducts = [...selectedComponent.content.products]
+                              newProducts[index] = { ...product, image: event.target?.result }
+                              updateComponentContent("products", newProducts)
+                            }
+                            reader.readAsDataURL(file)
+                          }
+                        }}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No products added yet. Click "Add Product" to add one.</p>
+            )}
+          </div>
+        )}
+
+        {selectedComponent.template === "portfolio-masonry" && (
+          <div className="mb-4 border-t pt-4">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="font-medium">Portfolio Items</h4>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const newItems = [...(selectedComponent.content.portfolioItems || [])]
+                  newItems.push({
+                    title: `Project ${newItems.length + 1}`,
+                    category: "New Category",
+                    image: null,
+                    link: "#",
+                    height: "medium",
+                  })
+                  updateComponentContent("portfolioItems", newItems)
+                }}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add Item
+              </Button>
+            </div>
+
+            {selectedComponent.content.portfolioItems && selectedComponent.content.portfolioItems.length > 0 ? (
+              selectedComponent.content.portfolioItems.map((item: any, index: number) => (
+                <div key={index} className="mb-4 p-3 border rounded-md relative">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="absolute top-2 right-2 h-6 w-6 p-0"
+                    onClick={() => {
+                      const newItems = [...selectedComponent.content.portfolioItems]
+                      newItems.splice(index, 1)
+                      updateComponentContent("portfolioItems", newItems)
+                    }}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`portfolio-${index}-title`} className="mb-1 block">
+                      Title
+                    </Label>
+                    <Input
+                      id={`portfolio-${index}-title`}
+                      value={item.title || ""}
+                      onChange={(e) => {
+                        const newItems = [...selectedComponent.content.portfolioItems]
+                        newItems[index] = { ...item, title: e.target.value }
+                        updateComponentContent("portfolioItems", newItems)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`portfolio-${index}-category`} className="mb-1 block">
+                      Category
+                    </Label>
+                    <Input
+                      id={`portfolio-${index}-category`}
+                      value={item.category || ""}
+                      onChange={(e) => {
+                        const newItems = [...selectedComponent.content.portfolioItems]
+                        newItems[index] = { ...item, category: e.target.value }
+                        updateComponentContent("portfolioItems", newItems)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`portfolio-${index}-height`} className="mb-1 block">
+                      Item Height
+                    </Label>
+                    <Select
+                      value={item.height || "medium"}
+                      onValueChange={(value) => {
+                        const newItems = [...selectedComponent.content.portfolioItems]
+                        newItems[index] = { ...item, height: value }
+                        updateComponentContent("portfolioItems", newItems)
+                      }}
+                    >
+                      <SelectTrigger id={`portfolio-${index}-height`}>
+                        <SelectValue placeholder="Select height" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="short">Short</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="tall">Tall</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`portfolio-${index}-link`} className="mb-1 block">
+                      Link URL
+                    </Label>
+                    <Input
+                      id={`portfolio-${index}-link`}
+                      value={item.link || "#"}
+                      onChange={(e) => {
+                        const newItems = [...selectedComponent.content.portfolioItems]
+                        newItems[index] = { ...item, link: e.target.value }
+                        updateComponentContent("portfolioItems", newItems)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`portfolio-${index}-image`} className="mb-1 block">
+                      Image
+                    </Label>
+                    <div className="flex flex-col gap-2">
+                      {item.image && (
+                        <div className="relative w-full h-24 mb-2 border rounded overflow-hidden">
+                          <img
+                            src={item.image || "/placeholder.svg"}
+                            alt={item.title}
+                            className="object-cover w-full h-full"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 bg-background/80 rounded-full"
+                            onClick={() => {
+                              const newItems = [...selectedComponent.content.portfolioItems]
+                              newItems[index] = { ...item, image: null }
+                              updateComponentContent("portfolioItems", newItems)
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      <Input
+                        id={`portfolio-${index}-image`}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            const reader = new FileReader()
+                            reader.onload = (event) => {
+                              const newItems = [...selectedComponent.content.portfolioItems]
+                              newItems[index] = { ...item, image: event.target?.result }
+                              updateComponentContent("portfolioItems", newItems)
+                            }
+                            reader.readAsDataURL(file)
+                          }
+                        }}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No portfolio items added yet. Click "Add Item" to add one.
+              </p>
+            )}
+          </div>
+        )}
+
+        {selectedComponent.template === "product-detail" && (
+          <div className="mb-4 border-t pt-4">
+            <h4 className="font-medium mb-3">Product Details</h4>
+
+            <div className="mb-2">
+              <Label htmlFor="productTitle" className="mb-1 block">
+                Product Title
+              </Label>
+              <Input
+                id="productTitle"
+                value={selectedComponent.content.productTitle || ""}
+                onChange={(e) => updateComponentContent("productTitle", e.target.value)}
+              />
+            </div>
+
+            <div className="mb-2">
+              <Label htmlFor="productCategory" className="mb-1 block">
+                Category
+              </Label>
+              <Input
+                id="productCategory"
+                value={selectedComponent.content.productCategory || ""}
+                onChange={(e) => updateComponentContent("productCategory", e.target.value)}
+              />
+            </div>
+
+            <div className="mb-2">
+              <Label htmlFor="productPrice" className="mb-1 block">
+                Price
+              </Label>
+              <Input
+                id="productPrice"
+                type="number"
+                step="0.01"
+                value={selectedComponent.content.productPrice || 0}
+                onChange={(e) => updateComponentContent("productPrice", Number.parseFloat(e.target.value) || 0)}
+              />
+            </div>
+
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-1">
+                <Label htmlFor="productSale">On Sale</Label>
+                <Switch
+                  id="productSale"
+                  checked={selectedComponent.content.productSalePrice !== null}
+                  onCheckedChange={(checked) => {
+                    updateComponentContent(
+                      "productSalePrice",
+                      checked ? (selectedComponent.content.productPrice * 0.8).toFixed(2) : null,
+                    )
+                  }}
+                />
+              </div>
+
+              {selectedComponent.content.productSalePrice !== null && (
+                <div className="mt-2">
+                  <Label htmlFor="productSalePrice" className="mb-1 block">
+                    Sale Price
+                  </Label>
+                  <Input
+                    id="productSalePrice"
+                    type="number"
+                    step="0.01"
+                    value={selectedComponent.content.productSalePrice || 0}
+                    onChange={(e) => updateComponentContent("productSalePrice", Number.parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="mb-2">
+              <Label htmlFor="productDescription" className="mb-1 block">
+                Description
+              </Label>
+              <textarea
+                id="productDescription"
+                className="w-full min-h-[60px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                value={selectedComponent.content.productDescription || ""}
+                onChange={(e) => updateComponentContent("productDescription", e.target.value)}
+              />
+            </div>
+
+            <div className="mb-2">
+              <Label htmlFor="productSKU" className="mb-1 block">
+                SKU
+              </Label>
+              <Input
+                id="productSKU"
+                value={selectedComponent.content.productSKU || ""}
+                onChange={(e) => updateComponentContent("productSKU", e.target.value)}
+              />
+            </div>
+
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-1">
+                <Label htmlFor="productInStock">In Stock</Label>
+                <Switch
+                  id="productInStock"
+                  checked={selectedComponent.content.productInStock}
+                  onCheckedChange={(checked) => {
+                    updateComponentContent("productInStock", checked)
+                    if (!checked) {
+                      updateComponentContent("productQuantity", 0)
+                    } else if (selectedComponent.content.productQuantity === 0) {
+                      updateComponentContent("productQuantity", 10)
+                    }
+                  }}
+                />
+              </div>
+
+              {selectedComponent.content.productInStock && (
+                <div className="mt-2">
+                  <Label htmlFor="productQuantity" className="mb-1 block">
+                    Quantity
+                  </Label>
+                  <Input
+                    id="productQuantity"
+                    type="number"
+                    min="0"
+                    value={selectedComponent.content.productQuantity || 0}
+                    onChange={(e) => {
+                      const quantity = Number.parseInt(e.target.value) || 0
+                      updateComponentContent("productQuantity", quantity)
+                      updateComponentContent("productInStock", quantity > 0)
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <Label className="mb-1 block">Product Images</Label>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                {(selectedComponent.content.productImages || []).map((image: string | null, idx: number) => (
+                  <div key={idx} className="relative border rounded overflow-hidden h-24">
+                    {image ? (
+                      <img
+                        src={image || "/placeholder.svg"}
+                        alt={`Product ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground text-sm">
+                        No image
+                      </div>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-1 right-1 h-6 w-6 bg-background/80 rounded-full"
+                      onClick={() => {
+                        const newImages = [...(selectedComponent.content.productImages || [])]
+                        newImages[idx] = null
+                        updateComponentContent("productImages", newImages)
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onload = (event) => {
+                        const newImages = [...(selectedComponent.content.productImages || [])]
+                        // Find the first null slot or add to the end
+                        const nullIndex = newImages.findIndex((img) => img === null)
+                        if (nullIndex >= 0) {
+                          newImages[nullIndex] = event.target?.result as string
+                        } else {
+                          newImages.push(event.target?.result as string)
+                        }
+                        updateComponentContent("productImages", newImages)
+                      }
+                      reader.readAsDataURL(file)
+                    }
+                  }}
+                  className="text-sm"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newImages = [...(selectedComponent.content.productImages || [])]
+                    newImages.push(null)
+                    updateComponentContent("productImages", newImages)
+                  }}
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Slot
+                </Button>
+              </div>
+            </div>
+
+            <div className="mb-2">
+              <Label htmlFor="productFeatures" className="mb-1 block">
+                Features (one per line)
+              </Label>
+              <textarea
+                id="productFeatures"
+                className="w-full min-h-[100px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                value={(selectedComponent.content.productFeatures || []).join("\n")}
+                onChange={(e) => {
+                  const features = e.target.value.split("\n").filter((line) => line.trim() !== "")
+                  updateComponentContent("productFeatures", features)
+                }}
+                placeholder="Enter one feature per line"
+              />
+            </div>
+          </div>
+        )}
+
+        {selectedComponent.template === "skills-expertise" && (
+          <div className="mb-4 border-t pt-4">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="font-medium">Skills</h4>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const newSkills = [...(selectedComponent.content.skills || [])]
+                  newSkills.push({
+                    name: `Skill ${newSkills.length + 1}`,
+                    percentage: 75,
+                  })
+                  updateComponentContent("skills", newSkills)
+                }}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add Skill
+              </Button>
+            </div>
+
+            {selectedComponent.content.skills && selectedComponent.content.skills.length > 0 ? (
+              selectedComponent.content.skills.map((skill: any, index: number) => (
+                <div key={index} className="mb-4 p-3 border rounded-md relative">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="absolute top-2 right-2 h-6 w-6 p-0"
+                    onClick={() => {
+                      const newSkills = [...selectedComponent.content.skills]
+                      newSkills.splice(index, 1)
+                      updateComponentContent("skills", newSkills)
+                    }}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`skill-${index}-name`} className="mb-1 block">
+                      Skill Name
+                    </Label>
+                    <Input
+                      id={`skill-${index}-name`}
+                      value={skill.name || ""}
+                      onChange={(e) => {
+                        const newSkills = [...selectedComponent.content.skills]
+                        newSkills[index] = { ...skill, name: e.target.value }
+                        updateComponentContent("skills", newSkills)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`skill-${index}-percentage`} className="mb-1 block">
+                      Percentage ({skill.percentage}%)
+                    </Label>
+                    <Slider
+                      id={`skill-${index}-percentage`}
+                      min={0}
+                      max={100}
+                      step={5}
+                      value={[skill.percentage || 50]}
+                      onValueChange={([value]) => {
+                        const newSkills = [...selectedComponent.content.skills]
+                        newSkills[index] = { ...skill, percentage: value }
+                        updateComponentContent("skills", newSkills)
+                      }}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No skills added yet. Click "Add Skill" to add one.</p>
+            )}
+          </div>
+        )}
         {selectedComponent.type === "content" && (
           <>
             <div className="mb-4">
@@ -826,7 +1649,6 @@ export function StyleEditor({
             Layout
           </TabsTrigger>
         </TabsList>
-
         <TabsContent value="typography" className="mt-0 space-y-4">
           <div>
             <Label className="mb-1 block">Font Family</Label>
@@ -926,7 +1748,6 @@ export function StyleEditor({
             </div>
           </div>
         </TabsContent>
-
         <TabsContent value="colors" className="mt-0 space-y-4">
           <div>
             <Label className="mb-1 block">Text Color</Label>
@@ -1025,194 +1846,93 @@ export function StyleEditor({
               </PopoverContent>
             </Popover>
           </div>
+        </TabsContent>
+        // Add the missing tabs content for background and layout
+        <TabsContent value="background" className="mt-0 space-y-4">
+          <div>
+            <Label className="mb-1 block">Background Image</Label>
+            <div className="flex flex-col gap-2">
+              {selectedComponent.styles.backgroundImage && (
+                <div className="relative w-full h-32 mb-2 border rounded overflow-hidden">
+                  <img
+                    src={selectedComponent.styles.backgroundImage || "/placeholder.svg"}
+                    alt="Background"
+                    className="object-cover w-full h-full"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 bg-background/80 rounded-full"
+                    onClick={() => updateComponentStyle("backgroundImage", null)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+              <Input
+                id="backgroundImage"
+                type="file"
+                accept="image/*"
+                onChange={handleBackgroundImageUpload}
+                className="text-sm"
+              />
+            </div>
+          </div>
 
           <div>
-            <Label className="mb-1 block">Border Color</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start">
-                  <div
-                    className="h-4 w-4 rounded-full mr-2"
-                    style={{
-                      backgroundColor: selectedComponent.styles.borderColor || "#e5e7eb",
-                    }}
-                  />
-                  {selectedComponent.styles.borderColor || "#e5e7eb"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0" align="start">
-                <div className="p-3">
-                  <div className="grid grid-cols-5 gap-2">
-                    {[
-                      "#e5e7eb",
-                      "#d1d5db",
-                      "#9ca3af",
-                      "#6b7280",
-                      "#4b5563",
-                      "#000000",
-                      "#ffffff",
-                      "#3b82f6",
-                      "#ef4444",
-                      "#10b981",
-                    ].map((color) => (
-                      <button
-                        key={color}
-                        className="h-6 w-6 rounded-md border"
-                        style={{ backgroundColor: color }}
-                        onClick={() => updateComponentStyle("borderColor", color)}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-2">
-                    <Input
-                      type="color"
-                      value={selectedComponent.styles.borderColor || "#e5e7eb"}
-                      onChange={(e) => updateComponentStyle("borderColor", e.target.value)}
-                      className="w-full h-8"
-                    />
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="background" className="mt-0 space-y-4">
-          <div className="mb-4">
-            <Label className="mb-1 block">Background Type</Label>
+            <Label className="mb-1 block">Background Size</Label>
             <Select
-              value={selectedComponent.styles.backgroundType || "color"}
-              onValueChange={(value) => updateComponentStyle("backgroundType", value)}
+              value={selectedComponent.styles.backgroundSize || "cover"}
+              onValueChange={(value) => updateComponentStyle("backgroundSize", value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select background type" />
+                <SelectValue placeholder="Select background size" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="color">Solid Color</SelectItem>
-                <SelectItem value="image">Image</SelectItem>
-                <SelectItem value="gradient">Gradient</SelectItem>
+                <SelectItem value="cover">Cover</SelectItem>
+                <SelectItem value="contain">Contain</SelectItem>
+                <SelectItem value="auto">Auto</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Image background options */}
-          {selectedComponent.styles.backgroundType === "image" && (
-            <>
-              <div>
-                <Label className="mb-1 block">Background Image</Label>
-                <div className="flex flex-col gap-2">
-                  {selectedComponent.styles.backgroundImage && (
-                    <div className="relative w-full h-24 mb-2 border rounded overflow-hidden">
-                      <div
-                        className="w-full h-full bg-center bg-cover"
-                        style={{ backgroundImage: `url(${selectedComponent.styles.backgroundImage})` }}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 bg-background/80 rounded-full"
-                        onClick={() => updateComponentStyle("backgroundImage", null)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                  <Input
-                    id="backgroundImage"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleBackgroundImageUpload}
-                    className="text-sm"
-                  />
-                </div>
-              </div>
+          <div>
+            <Label className="mb-1 block">Background Position</Label>
+            <Select
+              value={selectedComponent.styles.backgroundPosition || "center"}
+              onValueChange={(value) => updateComponentStyle("backgroundPosition", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select background position" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="center">Center</SelectItem>
+                <SelectItem value="top">Top</SelectItem>
+                <SelectItem value="bottom">Bottom</SelectItem>
+                <SelectItem value="left">Left</SelectItem>
+                <SelectItem value="right">Right</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-              {selectedComponent.styles.backgroundImage && (
-                <>
-                  <div>
-                    <Label className="mb-1 block">Background Size</Label>
-                    <Select
-                      value={selectedComponent.styles.backgroundSize || "cover"}
-                      onValueChange={(value) => updateComponentStyle("backgroundSize", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select background size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="cover">Cover</SelectItem>
-                        <SelectItem value="contain">Contain</SelectItem>
-                        <SelectItem value="auto">Auto</SelectItem>
-                        <SelectItem value="100%">100%</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label className="mb-1 block">Background Position</Label>
-                    <Select
-                      value={selectedComponent.styles.backgroundPosition || "center"}
-                      onValueChange={(value) => updateComponentStyle("backgroundPosition", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select position" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="center">Center</SelectItem>
-                        <SelectItem value="top">Top</SelectItem>
-                        <SelectItem value="bottom">Bottom</SelectItem>
-                        <SelectItem value="left">Left</SelectItem>
-                        <SelectItem value="right">Right</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <Label htmlFor="bg-repeat">No Repeat</Label>
-                      <Switch
-                        id="bg-repeat"
-                        checked={selectedComponent.styles.backgroundRepeat === "no-repeat"}
-                        onCheckedChange={(checked) =>
-                          updateComponentStyle("backgroundRepeat", checked ? "no-repeat" : "repeat")
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="mb-1 block">Background Overlay</Label>
-                    <div className="flex items-center gap-4">
-                      <Slider
-                        min={0}
-                        max={100}
-                        step={5}
-                        value={[selectedComponent.styles.backgroundOverlay || 0]}
-                        onValueChange={([value]) => updateComponentStyle("backgroundOverlay", value)}
-                        className="flex-1"
-                      />
-                      <span className="w-12 text-right">{selectedComponent.styles.backgroundOverlay || 0}%</span>
-                    </div>
-                  </div>
-                </>
-              )}
-            </>
-          )}
-
-          {/* Gradient background options */}
-          {selectedComponent.styles.backgroundType === "gradient" && (
-            <GradientPicker
-              value={
-                selectedComponent.styles.backgroundGradient || {
-                  type: "linear",
-                  direction: "to right",
-                  colors: ["#6366f1", "#8b5cf6"],
-                }
-              }
-              onChange={(gradient) => updateComponentStyle("backgroundGradient", gradient)}
-            />
-          )}
+          <div>
+            <Label className="mb-1 block">Background Repeat</Label>
+            <Select
+              value={selectedComponent.styles.backgroundRepeat || "no-repeat"}
+              onValueChange={(value) => updateComponentStyle("backgroundRepeat", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select background repeat" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="no-repeat">No Repeat</SelectItem>
+                <SelectItem value="repeat">Repeat</SelectItem>
+                <SelectItem value="repeat-x">Repeat X</SelectItem>
+                <SelectItem value="repeat-y">Repeat Y</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </TabsContent>
-
         <TabsContent value="layout" className="mt-0 space-y-4">
           <div>
             <Label className="mb-1 block">Padding</Label>
@@ -1230,69 +1950,53 @@ export function StyleEditor({
           </div>
 
           <div>
-            <Label className="mb-1 block">Border Width</Label>
-            <div className="flex items-center gap-4">
-              <Slider
-                min={0}
-                max={10}
-                step={1}
-                value={[selectedComponent.styles.borderWidth || 0]}
-                onValueChange={([value]) => updateComponentStyle("borderWidth", value)}
-                className="flex-1"
-              />
-              <span className="w-12 text-right">{selectedComponent.styles.borderWidth || 0}px</span>
-            </div>
-          </div>
-
-          <div>
             <Label className="mb-1 block">Border Radius</Label>
             <div className="flex items-center gap-4">
               <Slider
                 min={0}
                 max={32}
                 step={2}
-                value={[selectedComponent.styles.borderRadius || styles.borderRadius || 0]}
+                value={[selectedComponent.styles.borderRadius || 0]}
                 onValueChange={([value]) => updateComponentStyle("borderRadius", value)}
                 className="flex-1"
               />
-              <span className="w-12 text-right">
-                {selectedComponent.styles.borderRadius || styles.borderRadius || 0}px
-              </span>
+              <span className="w-12 text-right">{selectedComponent.styles.borderRadius || 0}px</span>
             </div>
-          </div>
-
-          <div>
-            <Label className="mb-1 block">Box Shadow</Label>
-            <Select
-              value={selectedComponent.styles.boxShadow || "none"}
-              onValueChange={(value) => updateComponentStyle("boxShadow", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select shadow" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="sm">Small</SelectItem>
-                <SelectItem value="md">Medium</SelectItem>
-                <SelectItem value="lg">Large</SelectItem>
-                <SelectItem value="xl">Extra Large</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <div>
             <Label className="mb-1 block">Width</Label>
             <Select
-              value={selectedComponent.styles.width || "full"}
+              value={selectedComponent.styles.width || "100%"}
               onValueChange={(value) => updateComponentStyle("width", value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select width" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="full">Full Width</SelectItem>
-                <SelectItem value="container">Container</SelectItem>
-                <SelectItem value="narrow">Narrow</SelectItem>
+                <SelectItem value="100%">Full Width</SelectItem>
+                <SelectItem value="75%">75%</SelectItem>
+                <SelectItem value="50%">50%</SelectItem>
+                <SelectItem value="25%">25%</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label className="mb-1 block">Height</Label>
+            <Select
+              value={selectedComponent.styles.height || "auto"}
+              onValueChange={(value) => updateComponentStyle("height", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select height" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Auto</SelectItem>
+                <SelectItem value="100vh">Full Screen</SelectItem>
+                <SelectItem value="75vh">75% Screen</SelectItem>
+                <SelectItem value="50vh">50% Screen</SelectItem>
+                <SelectItem value="25vh">25% Screen</SelectItem>
               </SelectContent>
             </Select>
           </div>

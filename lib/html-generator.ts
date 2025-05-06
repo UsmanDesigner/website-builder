@@ -198,6 +198,102 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
       flex: 1;
     }
 
+    /* Portfolio grid styles */
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .portfolio-item {
+      background-color: #ffffff;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .portfolio-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    }
+
+    .portfolio-image {
+      width: 100%;
+      padding-top: 75%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .portfolio-image img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .portfolio-item:hover .portfolio-image img {
+      transform: scale(1.05);
+    }
+
+    .portfolio-content {
+      padding: 1.5rem;
+    }
+
+    .portfolio-category {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #0070f3;
+      margin-bottom: 0.5rem;
+    }
+
+    .portfolio-filters {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .filter-button {
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .filter-button.active {
+      background-color: #0070f3;
+      color: white;
+      border: none;
+    }
+
+    .filter-button:not(.active) {
+      background-color: transparent;
+      color: inherit;
+      border: 1px solid #ccc;
+    }
+
+    /* Skills section styles */
+    .skill-bar {
+      height: 8px;
+      background-color: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .skill-progress {
+      height: 100%;
+      background-color: #0070f3;
+      border-radius: 4px;
+    }
+
     /* Media queries for responsive design */
     @media (max-width: 768px) {
       .flex-row {
@@ -241,11 +337,25 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
       .grid {
         grid-template-columns: 1fr;
       }
+
+      .portfolio-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 480px) {
       .btn {
         display: block;
+        width: 100%;
+        text-align: center;
+      }
+
+      .portfolio-filters {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .filter-button {
         width: 100%;
         text-align: center;
       }
@@ -283,6 +393,35 @@ export function generateHtmlCode(components: ComponentType[], styles: any): stri
           } else {
             nav.classList.add('mobile-hidden');
             nav.classList.remove('mobile-visible');
+          }
+        });
+      });
+
+      // Portfolio filtering
+      const filterButtons = document.querySelectorAll('.filter-button');
+      const portfolioItems = document.querySelectorAll('.portfolio-item');
+      
+      filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const filterValue = this.getAttribute('data-filter');
+          
+          // Update active button
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Filter items
+          if (filterValue === 'all') {
+            portfolioItems.forEach(item => {
+              item.style.display = 'block';
+            });
+          } else {
+            portfolioItems.forEach(item => {
+              if (item.getAttribute('data-category') === filterValue) {
+                item.style.display = 'block';
+              } else {
+                item.style.display = 'none';
+              }
+            });
           }
         });
       });
@@ -573,6 +712,168 @@ function generateContentHtml(component: ComponentType): string {
         </div>
       </section>
     `
+  } else if (component.template === "portfolio-grid") {
+    return `
+      <section style="text-align: center;">
+        <h2 style="font-size: 2rem; margin-bottom: 1rem;">${content.heading || "My Portfolio"}</h2>
+        <p style="margin-bottom: 2rem; max-width: 800px; margin: 0 auto 2rem; opacity: 0.8;">
+          ${content.subheading || "Check out my recent work"}
+        </p>
+        
+        ${
+          content.showFilters
+            ? `
+          <div class="portfolio-filters">
+            <button class="filter-button active" data-filter="all">All</button>
+            ${Array.from(new Set((content.portfolioItems || []).map((item: any) => item.category)))
+              .map(
+                (category: string) => `
+    <button class="filter-button" data-filter="${category}">${category}</button>
+  `,
+              )
+              .join("")}
+          </div>
+        `
+            : ""
+        }
+        
+        <div class="portfolio-grid">
+          ${(content.portfolioItems || [])
+            .map(
+              (item: any, index: number) => `
+            <div class="portfolio-item" data-category="${item.category}">
+              <div class="portfolio-image">
+                ${
+                  item.image
+                    ? `<img src="${item.image}" alt="${item.title}">`
+                    : `<div class="image-placeholder-text">Image Placeholder</div>`
+                }
+              </div>
+              <div class="portfolio-content">
+                <span class="portfolio-category">${item.category}</span>
+                <h3 style="margin-bottom: 0.5rem;">${item.title}</h3>
+                <p style="font-size: 0.875rem; margin-bottom: 1rem;">${item.description}</p>
+                <a href="${item.link || "#"}" style="display: inline-block; color: #0070f3; text-decoration: none; font-weight: bold; font-size: 0.875rem;">
+                  View Project →
+                </a>
+              </div>
+            </div>
+          `,
+            )
+            .join("")}
+        </div>
+      </section>
+    `
+  } else if (component.template === "portfolio-detail") {
+    return `
+      <section>
+        <div style="margin-bottom: 2rem;">
+          <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">${content.projectTitle || "Project Title"}</h2>
+          <p style="font-size: 1.125rem; opacity: 0.8; max-width: 800px;">
+            ${content.projectDescription || "Lorem ipsum dolor sit amet, consectetur adipiscing elit."}
+          </p>
+        </div>
+        
+        <div class="flex-row">
+          <div class="flex-col" style="flex: 2;">
+            <div class="image-placeholder" style="padding-top: 60%; margin-bottom: 1rem;">
+              ${
+                content.projectImages && content.projectImages[0]
+                  ? `<img src="${content.projectImages[0]}" alt="${content.projectTitle} main image">`
+                  : `<div class="image-placeholder-text">Main Image Placeholder</div>`
+              }
+            </div>
+            
+            ${
+              content.projectImages && content.projectImages.length > 1
+                ? `
+              <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                ${content.projectImages
+                  .slice(1)
+                  .map(
+                    (image: string | null, index: number) => `
+                  <div class="image-placeholder">
+                    ${
+                      image
+                        ? `<img src="${image}" alt="${content.projectTitle} image ${index + 2}">`
+                        : `<div class="image-placeholder-text">Image Placeholder</div>`
+                    }
+                  </div>
+                `,
+                  )
+                  .join("")}
+              </div>
+            `
+                : ""
+            }
+          </div>
+          
+          ${
+            content.showMetadata
+              ? `
+            <div class="flex-col" style="flex: 1;">
+              <div style="padding: 1.5rem; background-color: #f8f9fa; border-radius: 0.5rem;">
+                <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Project Details</h3>
+                
+                <div style="margin-bottom: 1rem;">
+                  <h4 style="font-size: 0.875rem; font-weight: bold; margin-bottom: 0.25rem;">Category</h4>
+                  <p>${content.projectCategory || "Web Design"}</p>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                  <h4 style="font-size: 0.875rem; font-weight: bold; margin-bottom: 0.25rem;">Client</h4>
+                  <p>${content.projectClient || "Client Name"}</p>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                  <h4 style="font-size: 0.875rem; font-weight: bold; margin-bottom: 0.25rem;">Date</h4>
+                  <p>${content.projectDate || "January 2023"}</p>
+                </div>
+                
+                ${
+                  content.projectLink
+                    ? `
+                  <a href="${content.projectLink}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display: inline-block; margin-top: 1rem;">
+                    Visit Project
+                  </a>
+                `
+                    : ""
+                }
+              </div>
+            </div>
+          `
+              : ""
+          }
+        </div>
+      </section>
+    `
+  } else if (component.template === "skills-expertise") {
+    return `
+      <section style="text-align: center;">
+        <h2 style="font-size: 2rem; margin-bottom: 1rem;">${content.heading || "Skills & Expertise"}</h2>
+        <p style="margin-bottom: 2rem; max-width: 800px; margin: 0 auto 2rem; opacity: 0.8;">
+          ${content.subheading || "What I bring to the table"}
+        </p>
+        
+        <div style="max-width: 800px; margin: 0 auto;">
+          ${(content.skills || [])
+            .map(
+              (skill: any) => `
+            <div style="margin-bottom: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span style="font-weight: bold;">${skill.name}</span>
+                <span>${skill.percentage}%</span>
+              </div>
+              <div class="skill-bar">
+                <div class="skill-progress" style="width: ${skill.percentage}%;"></div>
+              </div>
+            </div>
+          `,
+            )
+            .join("")}
+        </div>
+      </section>
+    `
   } else {
     return `
       <section>
@@ -663,6 +964,29 @@ function generateFooterHtml(component: ComponentType): string {
               .join("")}
           </ul>
         </nav>
+        <div>
+          ${content.copyright || `© ${new Date().getFullYear()} ${content.companyName || "Company Name"}. All rights reserved.`}
+        </div>
+      </footer>
+    `
+  } else if (component.template === "social-footer") {
+    return `
+      <footer style="text-align: center;">
+        <div style="margin-bottom: 1.5rem;">
+          <ul style="display: flex; justify-content: center; gap: 1.5rem; list-style: none; padding: 0; margin: 0; flex-wrap: wrap;">
+            ${(content.socialLinks || [])
+              .map(
+                (link: any, index: number) => `
+              <li>
+                <a href="${link.url || "#"}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background-color: #0070f3; color: white; text-decoration: none;" title="${link.platform}">
+                  ${link.platform.charAt(0)}
+                </a>
+              </li>
+            `,
+              )
+              .join("")}
+          </ul>
+        </div>
         <div>
           ${content.copyright || `© ${new Date().getFullYear()} ${content.companyName || "Company Name"}. All rights reserved.`}
         </div>

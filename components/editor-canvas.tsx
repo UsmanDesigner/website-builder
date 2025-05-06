@@ -8,7 +8,7 @@ import { HeaderComponent } from "@/components/templates/header-component"
 import { ContentComponent } from "@/components/templates/content-component"
 import { FooterComponent } from "@/components/templates/footer-component"
 import { Button } from "@/components/ui/button"
-import { Trash2, MoveVertical, Edit } from 'lucide-react'
+import { Trash2, MoveVertical, Edit, X } from 'lucide-react'
 
 interface EditorCanvasProps {
   components: ComponentType[]
@@ -31,15 +31,17 @@ export function EditorCanvas({
 }: EditorCanvasProps) {
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-full p-4 flex flex-col">
+      <div className="min-h-full p-2 md:p-4 flex flex-col">
         {components.length === 0 ? (
           <div className="flex items-center justify-center h-[calc(100vh-8rem)] border-2 border-dashed border-muted-foreground/20 rounded-lg">
-            <div className="text-center">
-              <p className="text-muted-foreground mb-4">Drag components from the left sidebar to start building</p>
+            <div className="text-center p-4">
+              <p className="text-muted-foreground mb-4 text-sm md:text-base">
+                Drag components from the left sidebar to start building
+              </p>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2 md:space-y-4">
             {components.map((component, index) => (
               <DraggableComponent
                 key={component.id}
@@ -47,6 +49,7 @@ export function EditorCanvas({
                 index={index}
                 isSelected={component.id === selectedComponentId}
                 onSelect={() => setSelectedComponentId(component.id)}
+                onClose={() => setSelectedComponentId(null)}
                 onUpdate={onUpdateComponent}
                 onRemove={onRemoveComponent}
                 onMove={onMoveComponent}
@@ -65,6 +68,7 @@ interface DraggableComponentProps {
   index: number
   isSelected: boolean
   onSelect: () => void
+  onClose: () => void
   onUpdate: (id: string, updates: Partial<ComponentType>) => void
   onRemove: (id: string) => void
   onMove: (dragIndex: number, hoverIndex: number) => void
@@ -76,6 +80,7 @@ function DraggableComponent({
   index,
   isSelected,
   onSelect,
+  onClose,
   onUpdate,
   onRemove,
   onMove,
@@ -136,29 +141,42 @@ function DraggableComponent({
       id={component.content.sectionId || undefined}
     >
       {isSelected && (
-        <div className="absolute top-2 right-2 z-10 flex gap-2 bg-background/80 p-1 rounded-md backdrop-blur-sm">
+        <div className="absolute top-2 right-2 z-10 flex gap-1 md:gap-2 bg-background/80 p-1 rounded-md backdrop-blur-sm">
           <Button
             variant="ghost"
             size="icon"
+            className="h-6 w-6 md:h-8 md:w-8"
             onClick={(e) => {
               e.stopPropagation()
               onSelect()
             }}
           >
-            <Edit className="h-4 w-4" />
+            <Edit className="h-3 w-3 md:h-4 md:w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="cursor-grab">
-            <MoveVertical className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="cursor-grab h-6 w-6 md:h-8 md:w-8">
+            <MoveVertical className="h-3 w-3 md:h-4 md:w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
+            className="h-6 w-6 md:h-8 md:w-8"
             onClick={(e) => {
               e.stopPropagation()
               onRemove(component.id)
             }}
           >
-            <Trash2 className="h-4 w-4 text-destructive" />
+            <Trash2 className="h-3 w-3 md:h-4 md:w-4 text-destructive" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 md:h-8 md:w-8"
+            onClick={(e) => {
+              e.stopPropagation()
+              onClose()
+            }}
+          >
+            <X className="h-3 w-3 md:h-4 md:w-4" />
           </Button>
         </div>
       )}
