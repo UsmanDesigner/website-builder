@@ -221,9 +221,42 @@ const ComponentItem = ({
             : "0",
           width: initializedComponent.styles.width || "100%",
           height: initializedComponent.styles.height || "auto",
-          backgroundImage: initializedComponent.styles.backgroundImage
-            ? `url(${initializedComponent.styles.backgroundImage})`
-            : "none",
+          backgroundImage:
+            initializedComponent.styles.backgroundType === "image"
+              ? `url(${initializedComponent.styles.backgroundImage})`
+              : initializedComponent.styles.backgroundType === "gradient"
+                ? initializedComponent.styles.gradientType === "linear"
+                  ? `linear-gradient(${initializedComponent.styles.gradientDirection || "to right"}, ${initializedComponent.styles.gradientStartColor || "#ffffff"}, ${initializedComponent.styles.gradientEndColor || "#000000"})`
+                  : `radial-gradient(circle, ${initializedComponent.styles.gradientStartColor || "#ffffff"}, ${initializedComponent.styles.gradientEndColor || "#000000"})`
+                : initializedComponent.styles.backgroundType === "colorWithGradient"
+                  ? initializedComponent.styles.gradientType === "linear"
+                    ? `linear-gradient(${initializedComponent.styles.gradientDirection || "to right"}, ${initializedComponent.styles.gradientStartColor || "#ffffff"}${
+                        initializedComponent.styles.gradientOpacity !== undefined
+                          ? Math.round(initializedComponent.styles.gradientOpacity * 0.01 * 255)
+                              .toString(16)
+                              .padStart(2, "0")
+                          : "ff"
+                      }, ${initializedComponent.styles.gradientEndColor || "#000000"}${
+                        initializedComponent.styles.gradientOpacity !== undefined
+                          ? Math.round(initializedComponent.styles.gradientOpacity * 0.01 * 255)
+                              .toString(16)
+                              .padStart(2, "0")
+                          : "ff"
+                      }), url(${initializedComponent.styles.backgroundImage})`
+                    : `radial-gradient(circle, ${initializedComponent.styles.gradientStartColor || "#ffffff"}${
+                        initializedComponent.styles.gradientOpacity !== undefined
+                          ? Math.round(initializedComponent.styles.gradientOpacity * 0.01 * 255)
+                              .toString(16)
+                              .padStart(2, "0")
+                          : "ff"
+                      }, ${initializedComponent.styles.gradientEndColor || "#000000"}${
+                        initializedComponent.styles.gradientOpacity !== undefined
+                          ? Math.round(initializedComponent.styles.gradientOpacity * 0.01 * 255)
+                              .toString(16)
+                              .padStart(2, "0")
+                          : "ff"
+                      }), url(${initializedComponent.styles.backgroundImage})`
+                  : "none",
           backgroundSize: initializedComponent.styles.backgroundSize || "cover",
           backgroundPosition: initializedComponent.styles.backgroundPosition || "center",
           backgroundRepeat: initializedComponent.styles.backgroundRepeat || "no-repeat",

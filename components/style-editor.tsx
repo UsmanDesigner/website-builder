@@ -2221,88 +2221,349 @@ export function StyleEditor({
         // Add the missing tabs content for background and layout
         <TabsContent value="background" className="mt-0 space-y-4">
           <div>
-            <Label className="mb-1 block">Background Image</Label>
-            <div className="flex flex-col gap-2">
-              {selectedComponent.styles.backgroundImage && (
-                <div className="relative w-full h-32 mb-2 border rounded overflow-hidden">
-                  <img
-                    src={selectedComponent.styles.backgroundImage || "/placeholder.svg"}
-                    alt="Background"
-                    className="object-cover w-full h-full"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 bg-background/80 rounded-full"
-                    onClick={() => updateComponentStyle("backgroundImage", null)}
-                  >
-                    <Trash2 className="h-4 w-4" />
+            <Label className="mb-1 block">Background Type</Label>
+            <Select
+              value={selectedComponent.styles.backgroundType || "color"}
+              onValueChange={(value) => updateComponentStyle("backgroundType", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select background type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="color">Solid Color</SelectItem>
+                <SelectItem value="gradient">Gradient</SelectItem>
+                <SelectItem value="image">Image</SelectItem>
+                <SelectItem value="colorWithGradient">Color with Gradient Overlay</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(selectedComponent.styles.backgroundType === "color" ||
+            !selectedComponent.styles.backgroundType ||
+            selectedComponent.styles.backgroundType === "colorWithGradient") && (
+            <div>
+              <Label className="mb-1 block">Background Color</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    <div
+                      className="h-4 w-4 rounded-full mr-2"
+                      style={{
+                        backgroundColor:
+                          selectedComponent.styles.backgroundColor || styles.backgroundColor || "#ffffff",
+                      }}
+                    />
+                    {selectedComponent.styles.backgroundColor || styles.backgroundColor || "#ffffff"}
                   </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <div className="p-3">
+                    <div className="grid grid-cols-5 gap-2">
+                      {[
+                        "#ffffff",
+                        "#f8f9fa",
+                        "#e9ecef",
+                        "#dee2e6",
+                        "#ced4da",
+                        "#6c757d",
+                        "#495057",
+                        "#343a40",
+                        "#212529",
+                        "#000000",
+                      ].map((color) => (
+                        <button
+                          key={color}
+                          className="h-6 w-6 rounded-md border"
+                          style={{ backgroundColor: color }}
+                          onClick={() => updateComponentStyle("backgroundColor", color)}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-2">
+                      <Input
+                        type="color"
+                        value={selectedComponent.styles.backgroundColor || styles.backgroundColor || "#ffffff"}
+                        onChange={(e) => updateComponentStyle("backgroundColor", e.target.value)}
+                        className="w-full h-8"
+                      />
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+
+          {(selectedComponent.styles.backgroundType === "gradient" ||
+            selectedComponent.styles.backgroundType === "colorWithGradient") && (
+            <>
+              <div>
+                <Label className="mb-1 block">Gradient Type</Label>
+                <Select
+                  value={selectedComponent.styles.gradientType || "linear"}
+                  onValueChange={(value) => updateComponentStyle("gradientType", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gradient type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="linear">Linear</SelectItem>
+                    <SelectItem value="radial">Radial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedComponent.styles.gradientType === "linear" && (
+                <div>
+                  <Label className="mb-1 block">Gradient Direction</Label>
+                  <Select
+                    value={selectedComponent.styles.gradientDirection || "to right"}
+                    onValueChange={(value) => updateComponentStyle("gradientDirection", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select direction" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="to right">Left to Right</SelectItem>
+                      <SelectItem value="to left">Right to Left</SelectItem>
+                      <SelectItem value="to bottom">Top to Bottom</SelectItem>
+                      <SelectItem value="to top">Bottom to Top</SelectItem>
+                      <SelectItem value="to bottom right">Top Left to Bottom Right</SelectItem>
+                      <SelectItem value="to bottom left">Top Right to Bottom Left</SelectItem>
+                      <SelectItem value="to top right">Bottom Left to Top Right</SelectItem>
+                      <SelectItem value="to top left">Bottom Right to Top Left</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
-              <Input
-                id="backgroundImage"
-                type="file"
-                accept="image/*"
-                onChange={handleBackgroundImageUpload}
-                className="text-sm"
-              />
+
+              <div>
+                <Label className="mb-1 block">Gradient Start Color</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start">
+                      <div
+                        className="h-4 w-4 rounded-full mr-2"
+                        style={{
+                          backgroundColor: selectedComponent.styles.gradientStartColor || "#ffffff",
+                        }}
+                      />
+                      {selectedComponent.styles.gradientStartColor || "#ffffff"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <div className="p-3">
+                      <div className="grid grid-cols-5 gap-2">
+                        {[
+                          "#ffffff",
+                          "#f8f9fa",
+                          "#e9ecef",
+                          "#6c757d",
+                          "#495057",
+                          "#ff6b6b",
+                          "#51cf66",
+                          "#339af0",
+                          "#fcc419",
+                          "#be4bdb",
+                        ].map((color) => (
+                          <button
+                            key={color}
+                            className="h-6 w-6 rounded-md border"
+                            style={{ backgroundColor: color }}
+                            onClick={() => updateComponentStyle("gradientStartColor", color)}
+                          />
+                        ))}
+                      </div>
+                      <div className="mt-2">
+                        <Input
+                          type="color"
+                          value={selectedComponent.styles.gradientStartColor || "#ffffff"}
+                          onChange={(e) => updateComponentStyle("gradientStartColor", e.target.value)}
+                          className="w-full h-8"
+                        />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div>
+                <Label className="mb-1 block">Gradient End Color</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start">
+                      <div
+                        className="h-4 w-4 rounded-full mr-2"
+                        style={{
+                          backgroundColor: selectedComponent.styles.gradientEndColor || "#000000",
+                        }}
+                      />
+                      {selectedComponent.styles.gradientEndColor || "#000000"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <div className="p-3">
+                      <div className="grid grid-cols-5 gap-2">
+                        {[
+                          "#000000",
+                          "#212529",
+                          "#343a40",
+                          "#495057",
+                          "#6c757d",
+                          "#ff6b6b",
+                          "#51cf66",
+                          "#339af0",
+                          "#fcc419",
+                          "#be4bdb",
+                        ].map((color) => (
+                          <button
+                            key={color}
+                            className="h-6 w-6 rounded-md border"
+                            style={{ backgroundColor: color }}
+                            onClick={() => updateComponentStyle("gradientEndColor", color)}
+                          />
+                        ))}
+                      </div>
+                      <div className="mt-2">
+                        <Input
+                          type="color"
+                          value={selectedComponent.styles.gradientEndColor || "#000000"}
+                          onChange={(e) => updateComponentStyle("gradientEndColor", e.target.value)}
+                          className="w-full h-8"
+                        />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div>
+                <Label className="mb-1 block">Gradient Opacity</Label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={[
+                      selectedComponent.styles.gradientOpacity !== undefined
+                        ? selectedComponent.styles.gradientOpacity
+                        : 100,
+                    ]}
+                    onValueChange={([value]) => updateComponentStyle("gradientOpacity", value)}
+                    className="flex-1"
+                  />
+                  <span className="w-12 text-right">
+                    {selectedComponent.styles.gradientOpacity !== undefined
+                      ? selectedComponent.styles.gradientOpacity
+                      : 100}
+                    %
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 border rounded-md">
+                <Label className="mb-2 block">Gradient Preview</Label>
+                <div
+                  className="w-full h-16 rounded-md border"
+                  style={{
+                    background:
+                      selectedComponent.styles.gradientType === "linear"
+                        ? `linear-gradient(${selectedComponent.styles.gradientDirection || "to right"}, ${selectedComponent.styles.gradientStartColor || "#ffffff"}, ${selectedComponent.styles.gradientEndColor || "#000000"})`
+                        : `radial-gradient(circle, ${selectedComponent.styles.gradientStartColor || "#ffffff"}, ${selectedComponent.styles.gradientEndColor || "#000000"})`,
+                  }}
+                />
+              </div>
+            </>
+          )}
+
+          {selectedComponent.styles.backgroundType === "image" && (
+            <div>
+              <Label className="mb-1 block">Background Image</Label>
+              <div className="flex flex-col gap-2">
+                {selectedComponent.styles.backgroundImage && (
+                  <div className="relative w-full h-32 mb-2 border rounded overflow-hidden">
+                    <img
+                      src={selectedComponent.styles.backgroundImage || "/placeholder.svg"}
+                      alt="Background"
+                      className="object-cover w-full h-full"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 bg-background/80 rounded-full"
+                      onClick={() => updateComponentStyle("backgroundImage", null)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                <Input
+                  id="backgroundImage"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBackgroundImageUpload}
+                  className="text-sm"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
-          <div>
-            <Label className="mb-1 block">Background Size</Label>
-            <Select
-              value={selectedComponent.styles.backgroundSize || "cover"}
-              onValueChange={(value) => updateComponentStyle("backgroundSize", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select background size" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cover">Cover</SelectItem>
-                <SelectItem value="contain">Contain</SelectItem>
-                <SelectItem value="auto">Auto</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {selectedComponent.styles.backgroundType === "image" && (
+            <>
+              <div>
+                <Label className="mb-1 block">Background Size</Label>
+                <Select
+                  value={selectedComponent.styles.backgroundSize || "cover"}
+                  onValueChange={(value) => updateComponentStyle("backgroundSize", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select background size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cover">Cover</SelectItem>
+                    <SelectItem value="contain">Contain</SelectItem>
+                    <SelectItem value="auto">Auto</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div>
-            <Label className="mb-1 block">Background Position</Label>
-            <Select
-              value={selectedComponent.styles.backgroundPosition || "center"}
-              onValueChange={(value) => updateComponentStyle("backgroundPosition", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select background position" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="center">Center</SelectItem>
-                <SelectItem value="top">Top</SelectItem>
-                <SelectItem value="bottom">Bottom</SelectItem>
-                <SelectItem value="left">Left</SelectItem>
-                <SelectItem value="right">Right</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div>
+                <Label className="mb-1 block">Background Position</Label>
+                <Select
+                  value={selectedComponent.styles.backgroundPosition || "center"}
+                  onValueChange={(value) => updateComponentStyle("backgroundPosition", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select background position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="center">Center</SelectItem>
+                    <SelectItem value="top">Top</SelectItem>
+                    <SelectItem value="bottom">Bottom</SelectItem>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div>
-            <Label className="mb-1 block">Background Repeat</Label>
-            <Select
-              value={selectedComponent.styles.backgroundRepeat || "no-repeat"}
-              onValueChange={(value) => updateComponentStyle("backgroundRepeat", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select background repeat" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no-repeat">No Repeat</SelectItem>
-                <SelectItem value="repeat">Repeat</SelectItem>
-                <SelectItem value="repeat-x">Repeat X</SelectItem>
-                <SelectItem value="repeat-y">Repeat Y</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div>
+                <Label className="mb-1 block">Background Repeat</Label>
+                <Select
+                  value={selectedComponent.styles.backgroundRepeat || "no-repeat"}
+                  onValueChange={(value) => updateComponentStyle("backgroundRepeat", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select background repeat" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="no-repeat">No Repeat</SelectItem>
+                    <SelectItem value="repeat">Repeat</SelectItem>
+                    <SelectItem value="repeat-x">Repeat X</SelectItem>
+                    <SelectItem value="repeat-y">Repeat Y</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
         </TabsContent>
         <TabsContent value="layout" className="mt-0 space-y-4">
           <div>

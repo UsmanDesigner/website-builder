@@ -68,7 +68,44 @@ export function ExportPanel({ components, styles, onClose }: ExportPanelProps) {
           borderRadius: component.styles.borderRadius ? `${component.styles.borderRadius}px` : "0",
           width: component.styles.width || "100%",
           height: component.styles.height || "auto",
-          backgroundImage: component.styles.backgroundImage ? `url(${component.styles.backgroundImage})` : "none",
+          backgroundImage:
+            component.styles.backgroundType === "image"
+              ? `url(${component.styles.backgroundImage})`
+              : component.styles.backgroundType === "gradient"
+                ? component.styles.gradientType === "linear"
+                  ? `linear-gradient(${component.styles.gradientDirection || "to right"}, ${component.styles.gradientStartColor || "#ffffff"}, ${component.styles.gradientEndColor || "#000000"})`
+                  : `radial-gradient(circle, ${component.styles.gradientStartColor || "#ffffff"}, ${component.styles.gradientEndColor || "#000000"})`
+                : component.styles.backgroundType === "colorWithGradient"
+                  ? component.styles.gradientType === "linear"
+                    ? `linear-gradient(${component.styles.gradientDirection || "to right"}, ${component.styles.gradientStartColor || "#ffffff"}${
+                        component.styles.gradientOpacity !== undefined
+                          ? Math.round(component.styles.gradientOpacity * 0.01 * 255)
+                              .toString(16)
+                              .padStart(2, "0")
+                          : "ff"
+                      }, ${component.styles.gradientEndColor || "#000000"}${
+                        component.styles.gradientOpacity !== undefined
+                          ? Math.round(component.styles.gradientOpacity * 0.01 * 255)
+                              .toString(16)
+                              .padStart(2, "0")
+                          : "ff"
+                      }), url(${component.styles.backgroundImage})`
+                    : `radial-gradient(circle, ${component.styles.gradientStartColor || "#ffffff"}${
+                        component.styles.gradientOpacity !== undefined
+                          ? Math.round(component.styles.gradientOpacity * 0.01 * 255)
+                              .toString(16)
+                              .padStart(2, "0")
+                          : "ff"
+                      }, ${component.styles.gradientEndColor || "#000000"}${
+                        component.styles.gradientOpacity !== undefined
+                          ? Math.round(component.styles.gradientOpacity * 0.01 * 255)
+                              .toString(16)
+                              .padStart(2, "0")
+                          : "ff"
+                      }), url(${component.styles.backgroundImage})`
+                  : component.styles.backgroundImage
+                    ? `url(${component.styles.backgroundImage})`
+                    : "none",
           backgroundSize: component.styles.backgroundSize || "cover",
           backgroundPosition: component.styles.backgroundPosition || "center",
           backgroundRepeat: component.styles.backgroundRepeat || "no-repeat",
