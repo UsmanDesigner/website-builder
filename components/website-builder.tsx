@@ -1,19 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { DndProvider } from "react-dnd"
+import { HTML5Backend } from "react-dnd-html5-backend"
 import { ComponentSelector } from "@/components/component-selector"
 import { EditorCanvas } from "@/components/editor-canvas"
 import { StyleEditor } from "@/components/style-editor"
-import { initialComponents } from "@/lib/initial-components"
-import { initialStyles } from "@/lib/initial-styles"
 import { ExportPanel } from "@/components/export-panel"
 import { Button } from "@/components/ui/button"
 import { Download, PanelLeft, PanelRight, X } from "lucide-react"
 import type { ComponentType } from "@/lib/types"
+import { initialComponents } from "@/lib/initial-components"
+import { initialStyles } from "@/lib/initial-styles"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
 export function WebsiteBuilder() {
-  const [components, setComponents] = useState(initialComponents)
+  const [components, setComponents] = useState<ComponentType[]>(initialComponents)
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null)
   const [styles, setStyles] = useState(initialStyles)
   const [showExportPanel, setShowExportPanel] = useState(false)
@@ -83,102 +85,109 @@ export function WebsiteBuilder() {
   }, [selectedComponentId, isDesktop])
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Left Sidebar - Component Selection */}
-      <div
-        className={`${
-          leftPanelOpen ? "w-64" : "w-0"
-        } border-r border-border bg-card overflow-y-auto transition-all duration-300 absolute md:relative z-10 h-full`}
-      >
-        {leftPanelOpen && (
-          <div className="relative h-full">
-            <ComponentSelector onAddComponent={handleAddComponent} />
-            {!isDesktop && (
+    <DndProvider backend={HTML5Backend}>
+      <div className="flex h-screen overflow-hidden">
+        {/* Left Sidebar - Component Selection */}
+        <div
+          className={`${
+            leftPanelOpen ? "w-64" : "w-0"
+          } border-r border-border bg-card overflow-y-auto transition-all duration-300 absolute md:relative z-10 h-full`}
+        >
+          {leftPanelOpen && (
+            <div className="relative h-full">
+              <ComponentSelector onAddComponent={handleAddComponent} />
+              {!isDesktop && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="absolute top-2 right-2 h-8 w-8 p-0"
+                  onClick={() => setLeftPanelOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Main Canvas */}
+        <div className="flex-1 flex flex-col">
+          {/* Top toolbar */}
+          <div className="p-2 border-b flex justify-between gap-2 bg-card">
+            <div className="flex gap-2">
               <Button
                 size="sm"
-                variant="ghost"
-                className="absolute top-2 right-2 h-8 w-8 p-0"
-                onClick={() => setLeftPanelOpen(false)}
+                variant="outline"
+                onClick={() => setLeftPanelOpen(!leftPanelOpen)}
+                className="md:hidden"
               >
-                <X className="h-4 w-4" />
+                <PanelLeft className="h-4 w-4" />
               </Button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Main Canvas */}
-      <div className="flex-1 flex flex-col">
-        {/* Top toolbar */}
-        <div className="p-2 border-b flex justify-between gap-2 bg-card">
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setLeftPanelOpen(!leftPanelOpen)} className="md:hidden">
-              <PanelLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setRightPanelOpen(!rightPanelOpen)}
-              className="md:hidden"
-            >
-              <PanelRight className="h-4 w-4" />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setRightPanelOpen(!rightPanelOpen)}
+                className="md:hidden"
+              >
+                <PanelRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setShowExportPanel(true)}>
+              <Download className="h-4 w-4 mr-2" />
+              Export
             </Button>
           </div>
-          <Button size="sm" variant="outline" onClick={() => setShowExportPanel(true)}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
 
-        {/* Canvas area */}
-        <div className="flex-1 overflow-y-auto bg-muted/30 flex flex-col">
-          <EditorCanvas
-            components={components}
-            selectedComponentId={selectedComponentId}
-            setSelectedComponentId={setSelectedComponentId}
-            onUpdateComponent={handleUpdateComponent}
-            onRemoveComponent={handleRemoveComponent}
-            onMoveComponent={handleMoveComponent}
-            styles={styles}
-          />
-        </div>
-      </div>
-
-      {/* Right Sidebar - Style Editing */}
-      <div
-        className={`${
-          rightPanelOpen ? "w-80" : "w-0"
-        } border-l border-border bg-card overflow-y-auto transition-all duration-300 absolute md:relative right-0 z-10 h-full`}
-      >
-        {rightPanelOpen && (
-          <div className="relative h-full">
-            <StyleEditor
-              selectedComponent={selectedComponent}
-              styles={styles}
-              onUpdateStyles={handleUpdateStyles}
+          {/* Canvas area */}
+          <div className="flex-1 overflow-y-auto bg-muted/30 flex flex-col">
+            <EditorCanvas
+              components={components}
+              selectedComponentId={selectedComponentId}
+              setSelectedComponentId={setSelectedComponentId}
               onUpdateComponent={handleUpdateComponent}
-              sectionIds={sectionIds}
-              allComponents={components}
-              onClose={() => !isDesktop && setRightPanelOpen(false)}
+              onRemoveComponent={handleRemoveComponent}
+              onMoveComponent={handleMoveComponent}
+              styles={styles}
             />
-            {!isDesktop && !selectedComponent && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="absolute top-2 right-2 h-8 w-8 p-0"
-                onClick={() => setRightPanelOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
           </div>
+        </div>
+
+        {/* Right Sidebar - Style Editing */}
+        <div
+          className={`${
+            rightPanelOpen ? "w-80" : "w-0"
+          } border-l border-border bg-card overflow-y-auto transition-all duration-300 absolute md:relative right-0 z-10 h-full`}
+        >
+          {rightPanelOpen && (
+            <div className="relative h-full">
+              <StyleEditor
+                selectedComponent={selectedComponent}
+                styles={styles}
+                onUpdateStyles={handleUpdateStyles}
+                onUpdateComponent={handleUpdateComponent}
+                sectionIds={sectionIds}
+                allComponents={components}
+                onClose={() => !isDesktop && setRightPanelOpen(false)}
+              />
+              {!isDesktop && !selectedComponent && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="absolute top-2 right-2 h-8 w-8 p-0"
+                  onClick={() => setRightPanelOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Export Panel */}
+        {showExportPanel && (
+          <ExportPanel components={components} styles={styles} onClose={() => setShowExportPanel(false)} />
         )}
       </div>
-
-      {/* Export Panel */}
-      {showExportPanel && (
-        <ExportPanel components={components} styles={styles} onClose={() => setShowExportPanel(false)} />
-      )}
-    </div>
+    </DndProvider>
   )
 }

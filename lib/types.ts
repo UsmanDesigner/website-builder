@@ -1,4 +1,3 @@
-// lib/types.ts
 
 import type { JSX } from "react"
 
@@ -17,4 +16,15 @@ export interface ComponentTemplateType {
   defaultContent: any
   defaultStyles: any
   render: (content: any, styles: any) => JSX.Element
+}
+
+export interface WebsiteData {
+  components: ComponentType[]
+  styles: {
+    fontFamily: string
+    fontSize: number
+    textColor: string
+    backgroundColor: string
+    padding: number
+  }
 }

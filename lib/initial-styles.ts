@@ -1,4 +1,4 @@
-
+// lib/initial-styles.ts
 
 export const initialStyles = {
   fontFamily: "sans",

@@ -1,32 +1,49 @@
 "use client"
 
 import { useState } from "react"
+import { Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
-import { headerTemplates, contentTemplates, footerTemplates } from "@/lib/component-templates"
 import { v4 as uuidv4 } from "uuid"
 import type { ComponentType } from "@/lib/types"
+
+// Import all template categories
+import { headerTemplates } from "@/lib/header-templates"
+import { contentTemplates as baseContentTemplates } from "@/lib/content-templates"
+import { portfolioTemplates } from "@/lib/portfolio-templates"
+import { skillsTemplates } from "@/lib/skills-templates"
+import { ecommerceTemplates } from "@/lib/ecommerce-templates"
+import { footerTemplates } from "@/lib/footer-templates"
+
+// Combine all content-related templates
+const allContentTemplates = [...baseContentTemplates, ...portfolioTemplates, ...skillsTemplates, ...ecommerceTemplates]
 
 interface ComponentSelectorProps {
   onAddComponent: (component: ComponentType) => void
 }
 
 export function ComponentSelector({ onAddComponent }: ComponentSelectorProps) {
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activeTab, setActiveTab] = useState("content")
 
-  const filteredHeaders = headerTemplates.filter((template) =>
-    template.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredHeaderTemplates = headerTemplates.filter(
+    (template) =>
+      template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template.preview.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  const filteredContent = contentTemplates.filter((template) =>
-    template.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredContentTemplates = allContentTemplates.filter(
+    (template) =>
+      template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template.preview.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  const filteredFooters = footerTemplates.filter((template) =>
-    template.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredFooterTemplates = footerTemplates.filter(
+    (template) =>
+      template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template.preview.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
   const handleAddComponent = (type: "header" | "content" | "footer", templateId: string) => {
@@ -35,7 +52,7 @@ export function ComponentSelector({ onAddComponent }: ComponentSelectorProps) {
     if (type === "header") {
       template = headerTemplates.find((t) => t.id === templateId)
     } else if (type === "content") {
-      template = contentTemplates.find((t) => t.id === templateId)
+      template = allContentTemplates.find((t) => t.id === templateId)
     } else {
       template = footerTemplates.find((t) => t.id === templateId)
     }
@@ -54,112 +71,119 @@ export function ComponentSelector({ onAddComponent }: ComponentSelectorProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="border rounded-md shadow-sm bg-background">
       <div className="p-4 border-b">
-        <h2 className="text-xl font-bold mb-4">Add Components</h2>
         <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
+            type="search"
             placeholder="Search components..."
             className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
-      <Tabs defaultValue="header" className="flex-1 flex flex-col">
-        <TabsList className="grid grid-cols-3 mx-4 mt-2">
-          <TabsTrigger value="header">Headers</TabsTrigger>
-          <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="footer">Footers</TabsTrigger>
+      <Tabs defaultValue="content" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full justify-start rounded-none border-b p-0">
+          <TabsTrigger
+            value="header"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+          >
+            Headers
+          </TabsTrigger>
+          <TabsTrigger
+            value="content"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+          >
+            Content
+          </TabsTrigger>
+          <TabsTrigger
+            value="footer"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+          >
+            Footers
+          </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="header" className="flex-1 p-0 m-0">
-          <ScrollArea className="h-full">
-            <div className="p-4 grid grid-cols-1 gap-4">
-              {filteredHeaders.length > 0 ? (
-                filteredHeaders.map((template) => (
-                  <ComponentCard
+        <ScrollArea className="h-full">
+          <TabsContent value="header" className="p-4 m-0">
+            <div className="grid grid-cols-1 gap-4">
+              {filteredHeaderTemplates.length > 0 ? (
+                filteredHeaderTemplates.map((template) => (
+                  <div
                     key={template.id}
-                    name={template.name}
-                    preview={template.preview}
+                    className="border rounded-md p-4 hover:border-primary transition-colors cursor-pointer"
                     onClick={() => handleAddComponent("header", template.id)}
-                  />
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{template.name}</h3>
+                        <p className="text-sm text-muted-foreground">{template.preview}</p>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => handleAddComponent("header", template.id)}>
+                        Add
+                      </Button>
+                    </div>
+                  </div>
                 ))
               ) : (
-                <p className="text-center text-muted-foreground py-8">No headers found</p>
+                <p className="text-center text-muted-foreground py-4">No header templates found</p>
               )}
             </div>
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent value="content" className="flex-1 p-0 m-0">
-          <ScrollArea className="h-full">
-            <div className="p-4 grid grid-cols-1 gap-4">
-              {filteredContent.length > 0 ? (
-                filteredContent.map((template) => (
-                  <ComponentCard
+          </TabsContent>
+          <TabsContent value="content" className="p-4 m-0">
+            <div className="grid grid-cols-1 gap-4">
+              {filteredContentTemplates.length > 0 ? (
+                filteredContentTemplates.map((template) => (
+                  <div
                     key={template.id}
-                    name={template.name}
-                    preview={template.preview}
+                    className="border rounded-md p-4 hover:border-primary transition-colors cursor-pointer"
                     onClick={() => handleAddComponent("content", template.id)}
-                  />
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{template.name}</h3>
+                        <p className="text-sm text-muted-foreground">{template.preview}</p>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => handleAddComponent("content", template.id)}>
+                        Add
+                      </Button>
+                    </div>
+                  </div>
                 ))
               ) : (
-                <p className="text-center text-muted-foreground py-8">No content sections found</p>
+                <p className="text-center text-muted-foreground py-4">No content templates found</p>
               )}
             </div>
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent value="footer" className="flex-1 p-0 m-0">
-          <ScrollArea className="h-full">
-            <div className="p-4 grid grid-cols-1 gap-4">
-              {filteredFooters.length > 0 ? (
-                filteredFooters.map((template) => (
-                  <ComponentCard
+          </TabsContent>
+          <TabsContent value="footer" className="p-4 m-0">
+            <div className="grid grid-cols-1 gap-4">
+              {filteredFooterTemplates.length > 0 ? (
+                filteredFooterTemplates.map((template) => (
+                  <div
                     key={template.id}
-                    name={template.name}
-                    preview={template.preview}
+                    className="border rounded-md p-4 hover:border-primary transition-colors cursor-pointer"
                     onClick={() => handleAddComponent("footer", template.id)}
-                  />
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{template.name}</h3>
+                        <p className="text-sm text-muted-foreground">{template.preview}</p>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => handleAddComponent("footer", template.id)}>
+                        Add
+                      </Button>
+                    </div>
+                  </div>
                 ))
               ) : (
-                <p className="text-center text-muted-foreground py-8">No footers found</p>
+                <p className="text-center text-muted-foreground py-4">No footer templates found</p>
               )}
             </div>
-          </ScrollArea>
-        </TabsContent>
+          </TabsContent>
+        </ScrollArea>
       </Tabs>
-    </div>
-  )
-}
-
-interface ComponentCardProps {
-  name: string
-  preview: string
-  onClick: () => void
-}
-
-function ComponentCard({ name, preview, onClick }: ComponentCardProps) {
-  return (
-    <div
-      className="border rounded-md overflow-hidden cursor-pointer hover:border-primary transition-colors"
-      onClick={onClick}
-    >
-      <div className="p-3 border-b bg-muted/50">
-        <div className="h-20 flex items-center justify-center bg-background rounded">
-          <span className="text-sm text-muted-foreground">{preview}</span>
-        </div>
-      </div>
-      <div className="p-3 flex justify-between items-center">
-        <span className="font-medium">{name}</span>
-        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Add {name}</span>
-          <span className="text-lg">+</span>
-        </Button>
-      </div>
     </div>
   )
 }

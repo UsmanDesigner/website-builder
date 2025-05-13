@@ -1,14 +1,16 @@
 "use client"
 
 import { useRef } from "react"
-import { useDrag, useDrop, DndProvider } from "react-dnd"
-import { HTML5Backend } from "react-dnd-html5-backend"
-import type { ComponentType } from "@/lib/types"
-import { HeaderComponent } from "@/components/templates/header-component"
-import { ContentComponent } from "@/components/templates/content-component"
-import { FooterComponent } from "@/components/templates/footer-component"
+import { useDrag, useDrop } from "react-dnd"
+import { Trash2, Move, ChevronUp, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Trash2, MoveVertical, Edit, X } from 'lucide-react'
+import type { ComponentType } from "@/lib/types"
+import { headerTemplates } from "@/lib/header-templates"
+import { contentTemplates } from "@/lib/content-templates"
+import { portfolioTemplates } from "@/lib/portfolio-templates"
+import { skillsTemplates } from "@/lib/skills-templates"
+import { ecommerceTemplates } from "@/lib/ecommerce-templates"
+import { footerTemplates } from "@/lib/footer-templates"
 
 interface EditorCanvasProps {
   components: ComponentType[]
@@ -20,74 +22,80 @@ interface EditorCanvasProps {
   styles: any
 }
 
-export function EditorCanvas({
-  components,
-  selectedComponentId,
-  setSelectedComponentId,
-  onUpdateComponent,
-  onRemoveComponent,
-  onMoveComponent,
-  styles,
-}: EditorCanvasProps) {
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="min-h-full p-2 md:p-4 flex flex-col">
-        {components.length === 0 ? (
-          <div className="flex items-center justify-center h-[calc(100vh-8rem)] border-2 border-dashed border-muted-foreground/20 rounded-lg">
-            <div className="text-center p-4">
-              <p className="text-muted-foreground mb-4 text-sm md:text-base">
-                Drag components from the left sidebar to start building
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-2 md:space-y-4">
-            {components.map((component, index) => (
-              <DraggableComponent
-                key={component.id}
-                component={component}
-                index={index}
-                isSelected={component.id === selectedComponentId}
-                onSelect={() => setSelectedComponentId(component.id)}
-                onClose={() => setSelectedComponentId(null)}
-                onUpdate={onUpdateComponent}
-                onRemove={onRemoveComponent}
-                onMove={onMoveComponent}
-                styles={styles}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </DndProvider>
-  )
+// Combine all templates for easier lookup
+const allTemplates = [
+  ...headerTemplates,
+  ...contentTemplates,
+  ...portfolioTemplates,
+  ...skillsTemplates,
+  ...ecommerceTemplates,
+  ...footerTemplates,
+]
+
+// Helper function to ensure all component properties are properly initialized
+const ensureComponentPropertiesInitialized = (component: ComponentType): ComponentType => {
+  const updatedComponent = { ...component }
+
+  // Initialize portfolio items if needed
+  if (component.template === "portfolio-grid" || component.template === "portfolio-masonry") {
+    updatedComponent.content.portfolioItems = component.content.portfolioItems || []
+    updatedComponent.content.heading = component.content.heading || "My Portfolio"
+    updatedComponent.content.subheading = component.content.subheading || "Check out my recent work"
+  }
+
+  // Initialize product items if needed
+  if (component.template === "product-grid") {
+    updatedComponent.content.products = component.content.products || []
+    updatedComponent.content.columns = component.content.columns || 3
+    updatedComponent.content.heading = component.content.heading || "Our Products"
+    updatedComponent.content.subheading = component.content.subheading || "Browse our collection"
+  }
+
+  // Initialize skills if needed
+  if (component.template === "skills-expertise") {
+    updatedComponent.content.skills = component.content.skills || []
+    updatedComponent.content.heading = component.content.heading || "Skills & Expertise"
+    updatedComponent.content.subheading = component.content.subheading || "What I bring to the table"
+  }
+
+  // Initialize features if needed
+  if (component.template === "features-grid") {
+    updatedComponent.content.features = component.content.features || []
+    updatedComponent.content.heading = component.content.heading || "Our Features"
+  }
+
+  // Initialize product detail properties if needed
+  if (component.template === "product-detail") {
+    updatedComponent.content.productImages = component.content.productImages || [null, null]
+    updatedComponent.content.productFeatures = component.content.productFeatures || []
+    updatedComponent.content.addToCartText = component.content.addToCartText || "Add to Cart"
+  }
+
+  return updatedComponent
 }
 
-interface DraggableComponentProps {
-  component: ComponentType
-  index: number
-  isSelected: boolean
-  onSelect: () => void
-  onClose: () => void
-  onUpdate: (id: string, updates: Partial<ComponentType>) => void
-  onRemove: (id: string) => void
-  onMove: (dragIndex: number, hoverIndex: number) => void
-  styles: any
-}
-
-function DraggableComponent({
+const ComponentItem = ({
   component,
   index,
   isSelected,
   onSelect,
-  onClose,
-  onUpdate,
   onRemove,
-  onMove,
+  onMoveComponent,
   styles,
-}: DraggableComponentProps) {
+  componentsCount,
+}: {
+  component: ComponentType
+  index: number
+  isSelected: boolean
+  onSelect: () => void
+  onRemove: () => void
+  onMoveComponent: (dragIndex: number, hoverIndex: number) => void
+  styles: any
+  componentsCount: number
+}) => {
   const ref = useRef<HTMLDivElement>(null)
 
+  // Initialize drag and drop
   const [{ isDragging }, drag] = useDrag({
     type: "COMPONENT",
     item: { index },
@@ -110,82 +118,154 @@ function DraggableComponent({
         return
       }
 
-      onMove(dragIndex, hoverIndex)
+      onMoveComponent(dragIndex, hoverIndex)
       item.index = hoverIndex
     },
   })
 
   drag(drop(ref))
 
-  const renderComponent = () => {
-    switch (component.type) {
-      case "header":
-        return <HeaderComponent component={component} styles={styles} />
-      case "content":
-        return <ContentComponent component={component} styles={styles} />
-      case "footer":
-        return <FooterComponent component={component} styles={styles} />
-      default:
-        return <div>Unknown component type</div>
-    }
+  // Find the template for this component
+  const template = allTemplates.find((t) => t.id === component.template)
+
+  if (!template) {
+    return (
+      <div className="p-4 border border-red-500 my-2 rounded">
+        <p className="text-red-500">Template not found: {component.template}</p>
+      </div>
+    )
   }
+
+  // Ensure component has all required properties
+  const initializedComponent = ensureComponentPropertiesInitialized(component)
 
   return (
     <div
       ref={ref}
-      className={`relative border-2 rounded-md ${
-        isSelected ? "border-primary" : "border-transparent"
-      } ${isDragging ? "opacity-50" : "opacity-100"} ${component.type === "footer" ? "mt-auto" : ""}`}
+      className={`relative my-4 ${isDragging ? "opacity-50" : ""} ${
+        isSelected ? "ring-2 ring-primary ring-offset-2" : ""
+      }`}
       onClick={onSelect}
-      style={{ cursor: isDragging ? "grabbing" : "pointer" }}
-      id={component.content.sectionId || undefined}
+      style={{ opacity: isDragging ? 0.5 : 1 }}
     >
-      {isSelected && (
-        <div className="absolute top-2 right-2 z-10 flex gap-1 md:gap-2 bg-background/80 p-1 rounded-md backdrop-blur-sm">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 md:h-8 md:w-8"
-            onClick={(e) => {
-              e.stopPropagation()
-              onSelect()
-            }}
-          >
-            <Edit className="h-3 w-3 md:h-4 md:w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="cursor-grab h-6 w-6 md:h-8 md:w-8">
-            <MoveVertical className="h-3 w-3 md:h-4 md:w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 md:h-8 md:w-8"
-            onClick={(e) => {
-              e.stopPropagation()
-              onRemove(component.id)
-            }}
-          >
-            <Trash2 className="h-3 w-3 md:h-4 md:w-4 text-destructive" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 md:h-8 md:w-8"
-            onClick={(e) => {
-              e.stopPropagation()
-              onClose()
-            }}
-          >
-            <X className="h-3 w-3 md:h-4 md:w-4" />
-          </Button>
+      <div className="absolute -top-3 right-2 z-10 flex gap-1">
+        <Button
+          size="icon"
+          variant="outline"
+          className="h-6 w-6 bg-background"
+          onClick={(e) => {
+            e.stopPropagation()
+            onMoveComponent(index, Math.max(0, index - 1))
+          }}
+          disabled={index === 0}
+        >
+          <ChevronUp className="h-4 w-4" />
+        </Button>
+        <Button
+          size="icon"
+          variant="outline"
+          className="h-6 w-6 bg-background"
+          onClick={(e) => {
+            e.stopPropagation()
+            onMoveComponent(index, Math.min(componentsCount - 1, index + 1))
+          }}
+          disabled={index === componentsCount - 1}
+        >
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+        <Button
+          size="icon"
+          variant="outline"
+          className="h-6 w-6 bg-background cursor-move"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Move className="h-4 w-4" />
+        </Button>
+        <Button
+          size="icon"
+          variant="outline"
+          className="h-6 w-6 bg-background"
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove()
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div
+        className={`overflow-hidden ${isSelected ? "outline outline-2 outline-primary" : "outline outline-1 outline-border"}`}
+        style={{
+          backgroundColor: initializedComponent.styles.backgroundColor || styles.backgroundColor,
+          padding: `${initializedComponent.styles.padding || styles.padding}px`,
+          color: initializedComponent.styles.color || styles.textColor,
+          fontFamily: initializedComponent.styles.fontFamily
+            ? initializedComponent.styles.fontFamily === "sans"
+              ? "ui-sans-serif, system-ui, sans-serif"
+              : initializedComponent.styles.fontFamily === "serif"
+                ? "ui-serif, Georgia, serif"
+                : "ui-monospace, monospace"
+            : styles.fontFamily === "sans"
+              ? "ui-sans-serif, system-ui, sans-serif"
+              : styles.fontFamily === "serif"
+                ? "ui-serif, Georgia, serif"
+                : "ui-monospace, monospace",
+          fontSize: `${initializedComponent.styles.fontSize || styles.fontSize}px`,
+          textAlign: initializedComponent.styles.textAlign || "left",
+          fontWeight: initializedComponent.styles.fontWeight || "normal",
+          fontStyle: initializedComponent.styles.fontStyle || "normal",
+          textDecoration: initializedComponent.styles.textDecoration || "none",
+          borderRadius: initializedComponent.styles.borderRadius
+            ? `${initializedComponent.styles.borderRadius}px`
+            : "0",
+          width: initializedComponent.styles.width || "100%",
+          height: initializedComponent.styles.height || "auto",
+          backgroundImage: initializedComponent.styles.backgroundImage
+            ? `url(${initializedComponent.styles.backgroundImage})`
+            : "none",
+          backgroundSize: initializedComponent.styles.backgroundSize || "cover",
+          backgroundPosition: initializedComponent.styles.backgroundPosition || "center",
+          backgroundRepeat: initializedComponent.styles.backgroundRepeat || "no-repeat",
+        }}
+      >
+        {template.render(initializedComponent.content, initializedComponent.styles)}
+      </div>
+    </div>
+  )
+}
+
+export function EditorCanvas({
+  components,
+  selectedComponentId,
+  setSelectedComponentId,
+  onUpdateComponent,
+  onRemoveComponent,
+  onMoveComponent,
+  styles,
+}: EditorCanvasProps) {
+  return (
+    <div className="p-4 min-h-full">
+      {components.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg p-6 text-center">
+          <p className="text-muted-foreground mb-4">Your canvas is empty</p>
+          <p className="text-sm text-muted-foreground">Add components from the left sidebar to get started</p>
         </div>
+      ) : (
+        components.map((component, index) => (
+          <ComponentItem
+            key={component.id}
+            component={component}
+            index={index}
+            isSelected={selectedComponentId === component.id}
+            onSelect={() => setSelectedComponentId(component.id)}
+            onRemove={() => onRemoveComponent(component.id)}
+            onMoveComponent={onMoveComponent}
+            styles={styles}
+            componentsCount={components.length}
+          />
+        ))
       )}
-      {component.content.sectionId && (
-        <div className="absolute top-2 left-2 z-10 bg-background/80 px-2 py-1 rounded-md text-xs text-muted-foreground backdrop-blur-sm">
-          #{component.content.sectionId}
-        </div>
-      )}
-      {renderComponent()}
     </div>
   )
 }

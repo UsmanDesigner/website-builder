@@ -562,6 +562,26 @@ export function StyleEditor({
               </Button>
             </div>
 
+            <div className="mb-4">
+              <Label htmlFor="productColumns" className="mb-1 block">
+                Products Per Row
+              </Label>
+              <Select
+                value={String(selectedComponent.content.columns || 3)}
+                onValueChange={(value) => updateComponentContent("columns", Number(value))}
+              >
+                <SelectTrigger id="productColumns">
+                  <SelectValue placeholder="Select columns" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 Column</SelectItem>
+                  <SelectItem value="2">2 Columns</SelectItem>
+                  <SelectItem value="3">3 Columns</SelectItem>
+                  <SelectItem value="4">4 Columns</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {selectedComponent.content.products && selectedComponent.content.products.length > 0 ? (
               selectedComponent.content.products.map((product: any, index: number) => (
                 <div key={index} className="mb-4 p-3 border rounded-md relative">
@@ -635,7 +655,7 @@ export function StyleEditor({
                           const newProducts = [...selectedComponent.content.products]
                           newProducts[index] = {
                             ...product,
-                            salePrice: checked ? (product.price * 0.8).toFixed(2) : null,
+                            salePrice: checked ? (product.price * 0.8).toFixed(2) * 1 : null,
                           }
                           updateComponentContent("products", newProducts)
                         }}
@@ -719,6 +739,21 @@ export function StyleEditor({
                         />
                       </div>
                     )}
+
+                    <div className="mb-2">
+                      <Label htmlFor={`product-${index}-addToCartText`} className="mb-1 block">
+                        Add to Cart Button Text
+                      </Label>
+                      <Input
+                        id={`product-${index}-addToCartText`}
+                        value={product.addToCartText || "Add to Cart"}
+                        onChange={(e) => {
+                          const newProducts = [...selectedComponent.content.products]
+                          newProducts[index] = { ...product, addToCartText: e.target.value }
+                          updateComponentContent("products", newProducts)
+                        }}
+                      />
+                    </div>
                   </div>
 
                   <div className="mb-2">
@@ -790,8 +825,277 @@ export function StyleEditor({
           </div>
         )}
 
+        {selectedComponent.template === "product-grid" && (
+          <div className="mb-4 p-3 border rounded-md">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="font-medium">Payment Methods</Label>
+              <Switch
+                checked={selectedComponent.content.showPaymentMethods || false}
+                onCheckedChange={(checked) => updateComponentContent("showPaymentMethods", checked)}
+              />
+            </div>
+
+            {selectedComponent.content.showPaymentMethods && (
+              <>
+                <div className="mb-2">
+                  <Label className="mb-1 block text-sm">Available Payment Methods</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="payment-creditcard"
+                        checked={selectedComponent.content.paymentCreditCard !== false}
+                        onCheckedChange={(checked) => updateComponentContent("paymentCreditCard", checked)}
+                      />
+                      <Label htmlFor="payment-creditcard">Credit Card</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="payment-paypal"
+                        checked={selectedComponent.content.paymentPayPal !== false}
+                        onCheckedChange={(checked) => updateComponentContent("paymentPayPal", checked)}
+                      />
+                      <Label htmlFor="payment-paypal">PayPal</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="payment-applepay"
+                        checked={selectedComponent.content.paymentApplePay !== false}
+                        onCheckedChange={(checked) => updateComponentContent("paymentApplePay", checked)}
+                      />
+                      <Label htmlFor="payment-applepay">Apple Pay</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="payment-googlepay"
+                        checked={selectedComponent.content.paymentGooglePay !== false}
+                        onCheckedChange={(checked) => updateComponentContent("paymentGooglePay", checked)}
+                      />
+                      <Label htmlFor="payment-googlepay">Google Pay</Label>
+                    </div>
+                  </div>
+                </div>
+                <div className="mb-2">
+                  <Label htmlFor="checkoutButtonText" className="mb-1 block text-sm">
+                    Checkout Button Text
+                  </Label>
+                  <Input
+                    id="checkoutButtonText"
+                    value={selectedComponent.content.checkoutButtonText || "Proceed to Checkout"}
+                    onChange={(e) => updateComponentContent("checkoutButtonText", e.target.value)}
+                    placeholder="Proceed to Checkout"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {selectedComponent.template === "portfolio-masonry" && (
           <div className="mb-4 border-t pt-4">
+            <div className="mb-4">
+              <Label htmlFor="portfolioHeading" className="mb-1 block">
+                Portfolio Heading
+              </Label>
+              <Input
+                id="portfolioHeading"
+                value={selectedComponent.content.heading || ""}
+                onChange={(e) => updateComponentContent("heading", e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <Label htmlFor="portfolioSubheading" className="mb-1 block">
+                Portfolio Subheading
+              </Label>
+              <Input
+                id="portfolioSubheading"
+                value={selectedComponent.content.subheading || ""}
+                onChange={(e) => updateComponentContent("subheading", e.target.value)}
+              />
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="font-medium">Portfolio Items</h4>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const newItems = [...(selectedComponent.content.portfolioItems || [])]
+                  newItems.push({
+                    title: `Project ${newItems.length + 1}`,
+                    category: "New Category",
+                    image: null,
+                    link: "#",
+                    height: "medium",
+                  })
+                  updateComponentContent("portfolioItems", newItems)
+                }}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add Item
+              </Button>
+            </div>
+
+            {selectedComponent.content.portfolioItems && selectedComponent.content.portfolioItems.length > 0 ? (
+              selectedComponent.content.portfolioItems.map((item: any, index: number) => (
+                <div key={index} className="mb-4 p-3 border rounded-md relative">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="absolute top-2 right-2 h-6 w-6 p-0"
+                    onClick={() => {
+                      const newItems = [...selectedComponent.content.portfolioItems]
+                      newItems.splice(index, 1)
+                      updateComponentContent("portfolioItems", newItems)
+                    }}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`portfolio-${index}-title`} className="mb-1 block">
+                      Title
+                    </Label>
+                    <Input
+                      id={`portfolio-${index}-title`}
+                      value={item.title || ""}
+                      onChange={(e) => {
+                        const newItems = [...selectedComponent.content.portfolioItems]
+                        newItems[index] = { ...item, title: e.target.value }
+                        updateComponentContent("portfolioItems", newItems)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`portfolio-${index}-category`} className="mb-1 block">
+                      Category
+                    </Label>
+                    <Input
+                      id={`portfolio-${index}-category`}
+                      value={item.category || ""}
+                      onChange={(e) => {
+                        const newItems = [...selectedComponent.content.portfolioItems]
+                        newItems[index] = { ...item, category: e.target.value }
+                        updateComponentContent("portfolioItems", newItems)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`portfolio-${index}-height`} className="mb-1 block">
+                      Item Height
+                    </Label>
+                    <Select
+                      value={item.height || "medium"}
+                      onValueChange={(value) => {
+                        const newItems = [...selectedComponent.content.portfolioItems]
+                        newItems[index] = { ...item, height: value }
+                        updateComponentContent("portfolioItems", newItems)
+                      }}
+                    >
+                      <SelectTrigger id={`portfolio-${index}-height`}>
+                        <SelectValue placeholder="Select height" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="short">Short</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="tall">Tall</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`portfolio-${index}-link`} className="mb-1 block">
+                      Link URL
+                    </Label>
+                    <Input
+                      id={`portfolio-${index}-link`}
+                      value={item.link || "#"}
+                      onChange={(e) => {
+                        const newItems = [...selectedComponent.content.portfolioItems]
+                        newItems[index] = { ...item, link: e.target.value }
+                        updateComponentContent("portfolioItems", newItems)
+                      }}
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`portfolio-${index}-image`} className="mb-1 block">
+                      Image
+                    </Label>
+                    <div className="flex flex-col gap-2">
+                      {item.image && (
+                        <div className="relative w-full h-24 mb-2 border rounded overflow-hidden">
+                          <img
+                            src={item.image || "/placeholder.svg"}
+                            alt={item.title}
+                            className="object-cover w-full h-full"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 bg-background/80 rounded-full"
+                            onClick={() => {
+                              const newItems = [...selectedComponent.content.portfolioItems]
+                              newItems[index] = { ...item, image: null }
+                              updateComponentContent("portfolioItems", newItems)
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      <Input
+                        id={`portfolio-${index}-image`}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            const reader = new FileReader()
+                            reader.onload = (event) => {
+                              const newItems = [...selectedComponent.content.portfolioItems]
+                              newItems[index] = { ...item, image: event.target?.result }
+                              updateComponentContent("portfolioItems", newItems)
+                            }
+                            reader.readAsDataURL(file)
+                          }
+                        }}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No portfolio items added yet. Click "Add Item" to add one.
+              </p>
+            )}
+          </div>
+        )}
+
+        {selectedComponent.template === "portfolio-grid" && (
+          <div className="mb-4 border-t pt-4">
+            <div className="mb-4">
+              <Label htmlFor="portfolioHeading" className="mb-1 block">
+                Portfolio Heading
+              </Label>
+              <Input
+                id="portfolioHeading"
+                value={selectedComponent.content.heading || ""}
+                onChange={(e) => updateComponentContent("heading", e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <Label htmlFor="portfolioSubheading" className="mb-1 block">
+                Portfolio Subheading
+              </Label>
+              <Input
+                id="portfolioSubheading"
+                value={selectedComponent.content.subheading || ""}
+                onChange={(e) => updateComponentContent("subheading", e.target.value)}
+              />
+            </div>
             <div className="flex justify-between items-center mb-2">
               <h4 className="font-medium">Portfolio Items</h4>
               <Button
@@ -1084,6 +1388,17 @@ export function StyleEditor({
               )}
             </div>
 
+            <div className="mb-2">
+              <Label htmlFor="addToCartText" className="mb-1 block">
+                Add to Cart Button Text
+              </Label>
+              <Input
+                id="addToCartText"
+                value={selectedComponent.content.addToCartText || "Add to Cart"}
+                onChange={(e) => updateComponentContent("addToCartText", e.target.value)}
+              />
+            </div>
+
             <div className="mb-4">
               <Label className="mb-1 block">Product Images</Label>
               <div className="grid grid-cols-2 gap-2 mb-2">
@@ -1106,7 +1421,7 @@ export function StyleEditor({
                       className="absolute top-1 right-1 h-6 w-6 bg-background/80 rounded-full"
                       onClick={() => {
                         const newImages = [...(selectedComponent.content.productImages || [])]
-                        newImages[idx] = null
+                        newImages.splice(idx, 1)
                         updateComponentContent("productImages", newImages)
                       }}
                     >
@@ -1114,44 +1429,6 @@ export function StyleEditor({
                     </Button>
                   </div>
                 ))}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      const reader = new FileReader()
-                      reader.onload = (event) => {
-                        const newImages = [...(selectedComponent.content.productImages || [])]
-                        // Find the first null slot or add to the end
-                        const nullIndex = newImages.findIndex((img) => img === null)
-                        if (nullIndex >= 0) {
-                          newImages[nullIndex] = event.target?.result as string
-                        } else {
-                          newImages.push(event.target?.result as string)
-                        }
-                        updateComponentContent("productImages", newImages)
-                      }
-                      reader.readAsDataURL(file)
-                    }
-                  }}
-                  className="text-sm"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const newImages = [...(selectedComponent.content.productImages || [])]
-                    newImages.push(null)
-                    updateComponentContent("productImages", newImages)
-                  }}
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Add Slot
-                </Button>
               </div>
             </div>
 
@@ -1241,6 +1518,26 @@ export function StyleEditor({
                         updateComponentContent("skills", newSkills)
                       }}
                     />
+                  </div>
+
+                  <div className="mb-2">
+                    <Label htmlFor={`skill-${index}-color`} className="mb-1 block">
+                      Progress Bar Color
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id={`skill-${index}-color`}
+                        type="color"
+                        value={skill.color || "#0070f3"}
+                        onChange={(e) => {
+                          const newSkills = [...selectedComponent.content.skills]
+                          newSkills[index] = { ...skill, color: e.target.value }
+                          updateComponentContent("skills", newSkills)
+                        }}
+                        className="w-12 h-8 p-1"
+                      />
+                      <span>{skill.color || "#0070f3"}</span>
+                    </div>
                   </div>
                 </div>
               ))
@@ -1358,6 +1655,80 @@ export function StyleEditor({
                 ))}
               </div>
             )}
+
+            <div className="mb-4 border-t pt-4">
+              <div className="flex justify-between items-center mb-2">
+                <h4 className="font-medium">Features</h4>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const newFeatures = [...(selectedComponent.content.features || [])]
+                    newFeatures.push({
+                      title: `Feature ${newFeatures.length + 1}`,
+                      description: `Description of feature ${newFeatures.length + 1}`,
+                      image: null,
+                    })
+                    updateComponentContent("features", newFeatures)
+                  }}
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Feature
+                </Button>
+              </div>
+
+              {selectedComponent.content.features && selectedComponent.content.features.length > 0 ? (
+                selectedComponent.content.features.map((feature: any, index: number) => (
+                  <div key={index} className="mb-4 p-3 border rounded-md relative">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="absolute top-2 right-2 h-6 w-6 p-0"
+                      onClick={() => {
+                        const newFeatures = [...selectedComponent.content.features]
+                        newFeatures.splice(index, 1)
+                        updateComponentContent("features", newFeatures)
+                      }}
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+
+                    <div className="mb-2">
+                      <Label htmlFor={`feature-${index}-title`} className="mb-1 block">
+                        Feature Title
+                      </Label>
+                      <Input
+                        id={`feature-${index}-title`}
+                        value={feature.title || ""}
+                        onChange={(e) => {
+                          const updatedFeatures = [...selectedComponent.content.features]
+                          updatedFeatures[index] = { ...feature, title: e.target.value }
+                          updateComponentContent("features", updatedFeatures)
+                        }}
+                      />
+                    </div>
+
+                    <div className="mb-2">
+                      <Label htmlFor={`feature-${index}-description`} className="mb-1 block">
+                        Feature Description
+                      </Label>
+                      <textarea
+                        id={`feature-${index}-description`}
+                        className="w-full min-h-[60px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        value={feature.description || ""}
+                        onChange={(e) => {
+                          const updatedFeatures = [...selectedComponent.content.features]
+                          updatedFeatures[index] = { ...feature, description: e.target.value }
+                          updateComponentContent("features", updatedFeatures)
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No features added yet. Click "Add Feature" to add one.</p>
+              )}
+            </div>
 
             {/* Buttons section with add/remove functionality */}
             <div className="mb-4 border-t pt-4">

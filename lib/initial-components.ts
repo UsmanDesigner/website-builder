@@ -1,3 +1,4 @@
+
 // lib/initial-components.ts
 import { v4 as uuidv4 } from "uuid"
 import type { ComponentType } from "./types"
